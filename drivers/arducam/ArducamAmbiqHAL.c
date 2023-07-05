@@ -32,52 +32,76 @@
 #include <am_mcu_apollo.h>
 #include <am_util.h>
 
-#include <FreeRTOS.h>
-#include <task.h>
-
 #include "am_bsp.h"
 
-#include "ArducamCamera.h"
 #include "Platform.h"
+#include "ArducamUart.h"
 
-#include "application_task.h"
-#include "application_task_cli.h"
+#define ARDUCAM_SPI_IOM (0)
+static void *arducam_spi_handle;
+static am_hal_iom_config_t arducam_spi_config;
 
-static TaskHandle_t application_task_handle;
-
-static ArducamCamera camera;
-
-static void application_setup_task()
+void arducamSpiBegin(void)
 {
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED0, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_CLEAR);
+    am_bsp_iom_pins_enable(ARDUCAM_SPI_IOM, AM_HAL_IOM_SPI_MODE);
 
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED1, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_CLEAR);
+    arducam_spi_config.eInterfaceMode = AM_HAL_IOM_SPI_MODE;
+    arducam_spi_config.ui32ClockFreq = AM_HAL_IOM_4MHZ;
+    arducam_spi_config.eSpiMode = AM_HAL_IOM_SPI_MODE_0;
 
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED2, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED2, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED3, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED3, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED4, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
+    am_hal_iom_initialize(ARDUCAM_SPI_IOM, &arducam_spi_handle);
+    am_hal_iom_power_ctrl(arducam_spi_handle, AM_HAL_SYSCTRL_WAKE, false);
+    am_hal_iom_configure(arducam_spi_handle, &arducam_spi_config);
+    am_hal_iom_enable(arducam_spi_handle);
 }
 
-static void application_task(void *parameter)
+uint8_t arducamSpiTransfer(uint8_t val)
 {
-    application_task_cli_register();
-
-    application_setup_task();
-    while (1)
-    {
-        vTaskDelay(pdMS_TO_TICKS(500));
-        am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
-    }
+    return 0;
 }
 
-void application_task_create(uint32_t priority)
+void arducamSpiTransferBlock(uint8_t *data, uint16_t len)
 {
-    xTaskCreate(application_task, "application", 512, 0, priority, &application_task_handle);
+}
+
+void arducamSpiCsPinHigh(int pin)
+{
+}
+
+void arducamSpiCsPinLow(int pin)
+{
+}
+
+void arducamCsOutputMode(int pin)
+{
+}
+
+void arducamDelayMs(uint16_t val)
+{
+    am_util_delay_ms(val);
+}
+
+void arducamDelayUs(uint16_t val)
+{
+    am_util_delay_us(val);
+}
+
+void SerialBegin(uint32_t baudRate)
+{
+}
+
+void SerialWrite(uint8_t ch)
+{
+}
+
+void SerialWriteBuff(uint8_t *buf, uint32_t len)
+{
+}
+
+void SerialPrintf(const char *str)
+{
+}
+
+uint8_t SerialRead()
+{
 }

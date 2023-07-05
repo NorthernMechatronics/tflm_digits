@@ -6,9 +6,6 @@ get_filename_component(APPLICATION ${CMAKE_CURRENT_SOURCE_DIR} NAME_WE)
 set(TARGET "nm180100" CACHE STRING "" FORCE)
 set(BSP_TARGET nm180100evb CACHE STRING "" FORCE)
 
-option(RAT_BLE_ENABLE "" OFF)
-option(RAT_LORAWAN_ENABLE "" OFF)
-
 add_subdirectory(nmsdk2)
 
 project(${APPLICATION})
@@ -113,6 +110,7 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/utils/bootloader
     ${PROJECT_SOURCE_DIR}/utils/RTT/Config
     ${PROJECT_SOURCE_DIR}/utils/RTT/RTT
+    ${PROJECT_SOURCE_DIR}/drivers/arducam
 )
 
 target_sources(
@@ -132,6 +130,9 @@ target_sources(
 
     ${BLE_SOURCES}
     ${LORAWAN_SOURCES}
+
+    drivers/arducam/ArducamAmbiqHAL.c
+    drivers/arducam/ArducamCamera.c
 )
 
 add_custom_command(
