@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cortex-debug",
+            "request": "launch",
+            "name": "Debug",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/${workspaceFolderBasename}",
+            "servertype": "jlink",
+            "device": "AMA3B1KK-KBR",
+            "interface": "swd",
+            "serialNumber": "",
+            "svdFile": "${workspaceFolder}/nmsdk2/hal/ambiq/pack/SVD/apollo3.svd",
+            "showDevDebugOutput": "none",
+            "serverArgs": [
+                "-singlerun",
+                "-nogui",
+                "-rtos", "./GDBServer/RTOSPlugin_FreeRTOS"
+            ],
+            "preLaunchTask": "CMake: build",
+            /* Uncomment to enable RTT */
+            /*
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto",
+                "decoders": [
+                    {
+                        "port": 0,
+                        "type": "console"
+                    }
+                ]
+            }
+            */
+        },
+    ]
+}

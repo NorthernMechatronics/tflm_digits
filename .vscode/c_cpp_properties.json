@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "all",
+            "cStandard": "c99",
+            "cppStandard": "c++20",
+            "compilerPath": "arm-none-eabi-gcc",
+            "defines": [
+                "AM_PART_APOLLO3",
+                "SOFT_SE",
+                "CONTEXT_MANGEMENT_ENABLED"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "${workspaceRoot}",
+                "${workspaceRoot}/**"
+            ],
+            "intelliSenseMode": "gcc-arm",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}

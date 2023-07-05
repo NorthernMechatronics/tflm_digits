@@ -1,0 +1,15 @@
+{
+    "cmake.configureEnvironment": {
+        "APPLICATION": "${workspaceFolderBasename}"
+    },
+    "cmake.buildDirectory": "${workspaceFolder}/build/${buildType}",
+    "cmake.buildTask": true,
+    "cmake.setBuildTypeOnMultiConfig": true,
+    "cmake.configureOnOpen": false,
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/nmsdk2/targets/nm180100/build.cmake",
+        "-DRAT_LORAWAN_ENABLE=OFF",
+        "-DRAT_BLE_ENABLE=OFF"
+    ],
+    "cmake.generator": "Unix Makefiles"
+}
