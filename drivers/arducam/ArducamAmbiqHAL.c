@@ -43,7 +43,13 @@ static am_hal_iom_config_t arducam_spi_config;
 
 void arducamSpiBegin(void)
 {
-    am_bsp_iom_pins_enable(ARDUCAM_SPI_IOM, AM_HAL_IOM_SPI_MODE);
+    am_hal_gpio_pinconfig(AM_BSP_GPIO_IOM0_SCK,  g_AM_BSP_GPIO_IOM0_SCK);
+    am_hal_gpio_pinconfig(AM_BSP_GPIO_IOM0_MISO, g_AM_BSP_GPIO_IOM0_MISO);
+    am_hal_gpio_pinconfig(AM_BSP_GPIO_IOM0_MOSI, g_AM_BSP_GPIO_IOM0_MOSI);
+
+//  Arducam driver uses manual chip select control
+//    am_hal_gpio_pinconfig(AM_BSP_GPIO_IOM0_CS,   g_AM_BSP_GPIO_IOM0_CS);
+    arducamCsOutputMode(AM_BSP_GPIO_IOM0_CS);
 
     arducam_spi_config.eInterfaceMode = AM_HAL_IOM_SPI_MODE;
     arducam_spi_config.ui32ClockFreq = AM_HAL_IOM_4MHZ;
@@ -57,23 +63,79 @@ void arducamSpiBegin(void)
 
 uint8_t arducamSpiTransfer(uint8_t val)
 {
-    return 0;
+    uint32_t data = 0;
+
+    if (val == 0)
+    {
+        am_hal_iom_transfer_t rx;
+
+        rx.ui32InstrLen                = 0;
+        rx.ui32Instr                   = 0;
+        rx.eDirection                  = AM_HAL_IOM_RX;
+        rx.ui32NumBytes                = 1;
+        rx.pui32RxBuffer               = (uint32_t *)&data;
+        rx.bContinue                   = false;
+        rx.ui8RepeatCount              = 0;
+        rx.ui32PauseCondition          = 0;
+        rx.ui32StatusSetClr            = 0;
+        rx.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+
+        am_hal_iom_blocking_transfer(arducam_spi_handle, &rx);
+    }
+    else
+    {
+        am_hal_iom_transfer_t tx;
+
+        data = val;
+
+        tx.ui32InstrLen                = 0;
+        tx.ui32Instr                   = 0;
+        tx.eDirection                  = AM_HAL_IOM_TX;
+        tx.ui32NumBytes                = 1;
+        tx.pui32TxBuffer               = (uint32_t *)&data;
+        tx.bContinue                   = false;
+        tx.ui8RepeatCount              = 0;
+        tx.ui32PauseCondition          = 0;
+        tx.ui32StatusSetClr            = 0;
+        tx.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+
+        am_hal_iom_blocking_transfer(arducam_spi_handle, &tx);
+    }
+
+    return data;
 }
 
 void arducamSpiTransferBlock(uint8_t *data, uint16_t len)
 {
-}
+        am_hal_iom_transfer_t rx;
+
+        rx.ui32InstrLen                = 0;
+        rx.ui32Instr                   = 0;
+        rx.eDirection                  = AM_HAL_IOM_RX;
+        rx.ui32NumBytes                = len;
+        rx.pui32RxBuffer               = (uint32_t *)data;
+        rx.bContinue                   = false;
+        rx.ui8RepeatCount              = 0;
+        rx.ui32PauseCondition          = 0;
+        rx.ui32StatusSetClr            = 0;
+        rx.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+
+        am_hal_iom_blocking_transfer(arducam_spi_handle, &rx);
+ }
 
 void arducamSpiCsPinHigh(int pin)
 {
+    am_hal_gpio_state_write(AM_BSP_GPIO_IOM0_CS, AM_HAL_GPIO_OUTPUT_SET);
 }
 
 void arducamSpiCsPinLow(int pin)
 {
+    am_hal_gpio_state_write(AM_BSP_GPIO_IOM0_CS, AM_HAL_GPIO_OUTPUT_SET);
 }
 
 void arducamCsOutputMode(int pin)
 {
+    am_hal_gpio_pinconfig(pin,   g_AM_HAL_GPIO_OUTPUT);
 }
 
 void arducamDelayMs(uint16_t val)
