@@ -11,5 +11,5 @@
         "-DRAT_LORAWAN_ENABLE=OFF",
         "-DRAT_BLE_ENABLE=OFF"
     ],
-    "cmake.generator": "Unix Makefiles"
+    "cmake.generator": "Unix Makefiles",
 }

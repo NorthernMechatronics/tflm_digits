@@ -37,6 +37,7 @@
 #include <am_bsp.h>
 
 #include <FreeRTOS.h>
+#include <stream_buffer.h>
 #include <task.h>
 
 #include "Platform.h"
@@ -48,6 +49,9 @@ static am_hal_iom_config_t arducam_spi_config;
 
 static TaskHandle_t arducam_task_handle;
 static void arducam_task(void *parameter);
+
+#define STREAM_BUFFER_SIZE 64
+static volatile StreamBufferHandle_t stream_buffer;
 
 #define UART_BUFFER_SIZE    (128)
 static uint8_t uart_buffer[UART_BUFFER_SIZE];
@@ -176,7 +180,9 @@ void SerialBegin(uint32_t baudRate)
     memset(uart_buffer, 0, UART_BUFFER_SIZE);
     uart_data_length = 0;
     uart_read_length = 0;
-    xTaskCreate(arducam_task, "arducam", 512, 0, 2, &arducam_task_handle);
+    stream_buffer = xStreamBufferCreate(STREAM_BUFFER_SIZE, 1);
+
+    xTaskCreate(arducam_task, "arducam", 512, 0, 1, &arducam_task_handle);
 }
 
 void SerialWrite(uint8_t ch)
@@ -209,27 +215,39 @@ uint8_t SerialRead()
     return rt;
 }
 
+uint32_t SerialAvailable()
+{
+    return uart_data_length;
+}
+
 static void arducam_task(void *parameter)
 {
-    uint32_t ui32BytesRead = 0;
-
     while (1)
     {
-        xTaskNotifyWait(0, 1, NULL, portMAX_DELAY);
-
-        uart_transfer.pui32BytesTransferred = &ui32BytesRead;
-        am_bsp_com_uart_transfer(&uart_transfer);
-        if (ui32BytesRead > 0)
-        {
-            uart_data_length = ui32BytesRead;
-        }
+        uint8_t ch;
+        xStreamBufferReceive(stream_buffer, &ch, 1, portMAX_DELAY);
+        uart_buffer[uart_data_length] = ch;
+        uart_data_length++;
     }
 }
 
 void am_uart_isr()
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    uint32_t ui32BytesRead = 0;
+    uart_transfer.pui32BytesTransferred = &ui32BytesRead;
+
     am_bsp_buffered_uart_service();
-    xTaskNotifyFromISR(arducam_task_handle, 0, eNoAction, &xHigherPriorityTaskWoken);
+    am_bsp_com_uart_transfer(&uart_transfer);
+    if (ui32BytesRead > 0)
+    {
+        xStreamBufferSendFromISR(
+            stream_buffer, (void *)uart_buffer, ui32BytesRead, &xHigherPriorityTaskWoken);
+    }
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void delayUs(uint32_t val)
+{
+    am_util_delay_us(val);
 }

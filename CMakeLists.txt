@@ -132,6 +132,7 @@ target_sources(
 
     drivers/arducam/ArducamAmbiqHAL.c
     drivers/arducam/ArducamCamera.c
+    drivers/arducam/ArducamLink.c
 )
 
 add_custom_command(

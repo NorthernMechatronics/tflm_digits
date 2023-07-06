@@ -48,6 +48,7 @@ void send_data_pack(char cmd_type, char* msg);
 // void printf(char* buff);
 void arducamUartWrite(uint8_t);
 void arducamUartWriteBuff(uint8_t*, uint16_t);
+uint32_t arducamUartAvailable(void);
 uint8_t arducamUartRead(void);
 
 #endif /*__ARDUCAMLINK_H*/
