@@ -1,0 +1,4 @@
+[submodule "nmsdk2"]
+	path = nmsdk2
+	url = ssh://git@gitlab.northernmechatronics.com:50251/nmi/software/nmsdk2.git
+	branch = master
