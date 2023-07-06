@@ -29,10 +29,15 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <string.h>
+
 #include <am_mcu_apollo.h>
 #include <am_util.h>
 
-#include "am_bsp.h"
+#include <am_bsp.h>
+
+#include <FreeRTOS.h>
+#include <task.h>
 
 #include "Platform.h"
 #include "ArducamUart.h"
@@ -40,6 +45,21 @@
 #define ARDUCAM_SPI_IOM (0)
 static void *arducam_spi_handle;
 static am_hal_iom_config_t arducam_spi_config;
+
+static TaskHandle_t arducam_task_handle;
+static void arducam_task(void *parameter);
+
+#define UART_BUFFER_SIZE    (128)
+static uint8_t uart_buffer[UART_BUFFER_SIZE];
+static uint32_t uart_read_length;
+static uint32_t uart_data_length;
+static am_hal_uart_transfer_t uart_transfer = {
+    .ui32Direction = AM_HAL_UART_READ,
+    .pui8Data = uart_buffer,
+    .ui32NumBytes = UART_BUFFER_SIZE,
+    .ui32TimeoutMs = 0,
+    .pui32BytesTransferred = 0,
+};
 
 void arducamSpiBegin(void)
 {
@@ -150,20 +170,66 @@ void arducamDelayUs(uint16_t val)
 
 void SerialBegin(uint32_t baudRate)
 {
+    am_bsp_buffered_uart_printf_enable();
+    NVIC_SetPriority((IRQn_Type)(UART0_IRQn + AM_BSP_UART_PRINT_INST),
+                    NVIC_configKERNEL_INTERRUPT_PRIORITY);
+    memset(uart_buffer, 0, UART_BUFFER_SIZE);
+    uart_data_length = 0;
+    uart_read_length = 0;
+    xTaskCreate(arducam_task, "arducam", 512, 0, 2, &arducam_task_handle);
 }
 
 void SerialWrite(uint8_t ch)
 {
+    am_bsp_uart_send(&ch, 1);
 }
 
 void SerialWriteBuff(uint8_t *buf, uint32_t len)
 {
+    am_bsp_uart_send(buf, len);
 }
 
 void SerialPrintf(const char *str)
 {
+    am_bsp_uart_string_print((char *)str);
 }
 
 uint8_t SerialRead()
 {
+    uint8_t rt = 0;
+    rt = uart_buffer[uart_read_length];
+    uart_read_length++;
+
+    if (uart_read_length == uart_data_length)
+    {
+        uart_read_length = 0;
+        uart_data_length = 0;
+    }
+
+    return rt;
+}
+
+static void arducam_task(void *parameter)
+{
+    uint32_t ui32BytesRead = 0;
+
+    while (1)
+    {
+        xTaskNotifyWait(0, 1, NULL, portMAX_DELAY);
+
+        uart_transfer.pui32BytesTransferred = &ui32BytesRead;
+        am_bsp_com_uart_transfer(&uart_transfer);
+        if (ui32BytesRead > 0)
+        {
+            uart_data_length = ui32BytesRead;
+        }
+    }
+}
+
+void am_uart_isr()
+{
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    am_bsp_buffered_uart_service();
+    xTaskNotifyFromISR(arducam_task_handle, 0, eNoAction, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

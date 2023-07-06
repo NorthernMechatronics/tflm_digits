@@ -219,10 +219,3 @@ uint8_t arducamUartRead(void)
 {
     return SerialRead();
 }
-
-void arducamFlush(void)
-{
-    while (arducamUartAvailable()) {
-        arducamUartRead();
-    }
-}

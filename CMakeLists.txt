@@ -120,7 +120,6 @@ target_sources(
     main.c
     application_task_cli.c
     application_task.c
-    console_task.c
 
     utils/bootloader/am_bootloader.c
     utils/bootloader/am_multi_boot.c
