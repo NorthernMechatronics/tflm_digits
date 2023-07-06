@@ -130,6 +130,7 @@ extern void am_bsp_itm_printf_enable(void);
 extern void am_bsp_itm_printf_disable(void);
 
 extern void am_bsp_uart_string_print(char *pcString);
+extern void am_bsp_uart_send(uint8_t *pui8Data, uint32_t ui32Length);
 extern void am_bsp_uart_printf_enable(void);
 extern void am_bsp_uart_printf_disable(void);
 

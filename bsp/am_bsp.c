@@ -795,6 +795,36 @@ am_bsp_uart_string_print(char *pcString)
     }
 } // am_bsp_uart_string_print()
 
+void am_bsp_uart_send(uint8_t *pui8Data, uint32_t ui32Length)
+{
+    uint32_t ui32BytesWritten = 0;
+
+    am_hal_uart_transfer_t sUartWrite =
+    {
+        .ui32Direction = AM_HAL_UART_WRITE,
+        .pui8Data = pui8Data,
+        .ui32NumBytes = ui32Length,
+        .ui32TimeoutMs = AM_HAL_UART_WAIT_FOREVER,
+        .pui32BytesTransferred = &ui32BytesWritten,
+    };
+
+    am_hal_uart_transfer(g_sCOMUART, &sUartWrite);
+
+    while (ui32BytesWritten < ui32Length)
+    {
+        ui32Length -= ui32BytesWritten;
+        pui8Data += ui32BytesWritten;
+
+        ui32BytesWritten = 0;
+
+        sUartWrite.pui8Data = pui8Data;
+        sUartWrite.ui32NumBytes = ui32Length;
+        sUartWrite.pui32BytesTransferred = &ui32BytesWritten;
+        
+        am_hal_uart_transfer(g_sCOMUART, &sUartWrite);
+    }
+}
+
 //*****************************************************************************
 //
 // Pass-through function to let applications access the COM UART.
