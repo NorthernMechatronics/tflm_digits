@@ -45,6 +45,8 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/bsp/${BSP_TARGET}
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/config
+    ${PROJECT_SOURCE_DIR}/utils/RTT/Config
+    ${PROJECT_SOURCE_DIR}/utils/RTT/RTT
 )
 
 target_sources(
@@ -54,6 +56,10 @@ target_sources(
     main.c
     application_task_cli.c
     application_task.c
+    console_task.c
+
+    utils/RTT/RTT/SEGGER_RTT.c
+    utils/RTT/RTT/SEGGER_RTT_printf.c
 )
 
 add_custom_command(

@@ -42,6 +42,7 @@
 #include <task.h>
 
 #include "application_task.h"
+#include "console_task.h"
 
 //*****************************************************************************
 //
@@ -180,6 +181,7 @@ void system_setup(void)
 
 void system_start(void)
 {
+    console_task_create(2, CONSOLE_OUTPUT_UART);
     application_task_create(1);
 
     //
