@@ -22,6 +22,8 @@ target_link_libraries(
     PUBLIC
         -T${PROJECT_SOURCE_DIR}/AMA3B1KK.ld
         -Wl,--start-group
+        -lstdc++
+        -lsupc++
         -lm
         -lc
         -lgcc
