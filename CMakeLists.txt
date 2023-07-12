@@ -20,7 +20,8 @@ target_link_libraries(
         bsp
         hal
     PUBLIC
-        -T${PROJECT_SOURCE_DIR}/AMA3B1KK.ld
+#        -T${PROJECT_SOURCE_DIR}/AMA3B1KK.ld
+        -T${TARGET_LINK_SCRIPT}
         -Wl,--start-group
         -lstdc++
         -lsupc++
@@ -52,7 +53,7 @@ target_include_directories(
 target_sources(
     ${APPLICATION}
     PRIVATE
-    startup_gcc.c
+    ${TARGET_SRC}
     main.c
     application_task_cli.c
     application_task.c

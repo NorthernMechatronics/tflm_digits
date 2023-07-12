@@ -51,14 +51,9 @@ static CLI_Command_Definition_t application_task_cli_definition = {
     application_task_cli_entry,
     -1};
 
-static size_t argc;
-static char *argv[8];
-static char argz[128];
-
 void application_task_cli_register()
 {
     FreeRTOS_CLIRegisterCommand(&application_task_cli_definition);
-    argc = 0;
 }
 
 static void help(char *pui8OutBuffer, size_t argc, char **argv)
@@ -95,15 +90,15 @@ static void ota(char *pui8OutBuffer, size_t argc, char **argv)
             am_hal_ota_status_t status[AM_HAL_SECURE_OTA_MAX_OTA];
             am_hal_get_ota_status(p_ota_desc, AM_HAL_SECURE_OTA_MAX_OTA, status);
 
-            for (uint32_t i = 0; i < AM_HAL_SECURE_OTA_MAX_OTA; i++)
+            for (uint32_t n = 0; n < AM_HAL_SECURE_OTA_MAX_OTA; n++)
             {
-                if ((uint32_t)status[i].pImage == 0xFFFFFFFF)
+                if ((uint32_t)status[n].pImage == 0xFFFFFFFF)
                 {
                     break;
                 }
                 char *buffer = pui8OutBuffer + strlen(pui8OutBuffer);
                 am_util_stdio_sprintf(buffer, "Previous OTA state address: 0x%08x - status: %d\r\n",
-                    status[i].pImage, status[i].status);
+                    status[n].pImage, status[n].status);
             }
         }
         else
@@ -138,6 +133,10 @@ static void ota(char *pui8OutBuffer, size_t argc, char **argv)
 portBASE_TYPE
 application_task_cli_entry(char *pui8OutBuffer, size_t ui32OutBufferLength, const char *pui8Command)
 {
+    size_t argc;
+    char *argv[8];
+    char argz[128];
+
     pui8OutBuffer[0] = 0;
 
     strcpy(argz, pui8Command);
