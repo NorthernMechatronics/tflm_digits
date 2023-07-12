@@ -44,6 +44,15 @@
 //
 //*****************************************************************************
 
+extern unsigned int _sidata;
+extern unsigned int _sdata;
+extern unsigned int _edata;
+extern unsigned int _sbss;
+extern unsigned int _ebss;
+extern void __stack(void);
+
+extern int main(void);
+
 //*****************************************************************************
 //
 // The following are constructs created by the linker, indicating where the
@@ -51,62 +60,52 @@
 // "data" segment resides immediately following the "text" segment.
 //
 //*****************************************************************************
-extern unsigned int __data_start__;
-extern unsigned int __data_end__;
-extern unsigned int __bss_start__;
-extern unsigned int __bss_end__;
-extern unsigned int __etext;
+extern void Reset_Handler(void) __attribute((naked));
+extern void NMI_Handler(void) __attribute((weak));
+extern void HardFault_Handler(void) __attribute((weak));
+extern void MemManage_Handler(void) __attribute((weak, alias("HardFault_Handler")));
+extern void BusFault_Handler(void) __attribute((weak, alias("HardFault_Handler")));
+extern void UsageFault_Handler(void) __attribute((weak, alias("HardFault_Handler")));
+extern void SecureFault_Handler(void) __attribute((weak));
+extern void SVC_Handler(void) __attribute((weak, alias("am_default_isr")));
+extern void DebugMon_Handler(void) __attribute((weak, alias("am_default_isr")));
+extern void PendSV_Handler(void) __attribute((weak, alias("am_default_isr")));
+extern void SysTick_Handler(void) __attribute((weak, alias("am_default_isr")));
 
-extern void __stack(void);
-extern void __libc_init_array(void);
-extern int main(void);
+extern void am_brownout_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_watchdog_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_rtc_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_vcomp_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_ioslave_ios_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_ioslave_acc_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_iomaster0_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_iomaster1_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_iomaster2_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_iomaster3_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_iomaster4_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_iomaster5_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_ble_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_gpio_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_ctimer_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_uart_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_uart1_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_scard_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_adc_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_pdm0_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_mspi0_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_software0_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr0_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr1_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr2_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr3_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr4_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr5_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr6_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_stimer_cmpr7_isr(void) __attribute((weak, alias("am_default_isr")));
+extern void am_clkgen_isr(void) __attribute((weak, alias("am_default_isr")));
 
-extern void Reset_Handler(void)       __attribute ((naked));
-extern void NMI_Handler(void)         __attribute ((weak));
-extern void HardFault_Handler(void)   __attribute ((weak));
-extern void MemManage_Handler(void)   __attribute ((weak, alias ("HardFault_Handler")));
-extern void BusFault_Handler(void)    __attribute ((weak, alias ("HardFault_Handler")));
-extern void UsageFault_Handler(void)  __attribute ((weak, alias ("HardFault_Handler")));
-extern void SecureFault_Handler(void) __attribute ((weak));
-extern void SVC_Handler(void)         __attribute ((weak, alias ("am_default_isr")));
-extern void DebugMon_Handler(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void PendSV_Handler(void)      __attribute ((weak, alias ("am_default_isr")));
-extern void SysTick_Handler(void)     __attribute ((weak, alias ("am_default_isr")));
-
-extern void am_brownout_isr(void)     __attribute ((weak, alias ("am_default_isr")));
-extern void am_watchdog_isr(void)     __attribute ((weak, alias ("am_default_isr")));
-extern void am_rtc_isr(void)          __attribute ((weak, alias ("am_default_isr")));
-extern void am_vcomp_isr(void)        __attribute ((weak, alias ("am_default_isr")));
-extern void am_ioslave_ios_isr(void)  __attribute ((weak, alias ("am_default_isr")));
-extern void am_ioslave_acc_isr(void)  __attribute ((weak, alias ("am_default_isr")));
-extern void am_iomaster0_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_iomaster1_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_iomaster2_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_iomaster3_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_iomaster4_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_iomaster5_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_ble_isr(void)          __attribute ((weak, alias ("am_default_isr")));
-extern void am_gpio_isr(void)         __attribute ((weak, alias ("am_default_isr")));
-extern void am_ctimer_isr(void)       __attribute ((weak, alias ("am_default_isr")));
-extern void am_uart_isr(void)         __attribute ((weak, alias ("am_default_isr")));
-extern void am_uart1_isr(void)        __attribute ((weak, alias ("am_default_isr")));
-extern void am_scard_isr(void)        __attribute ((weak, alias ("am_default_isr")));
-extern void am_adc_isr(void)          __attribute ((weak, alias ("am_default_isr")));
-extern void am_pdm0_isr(void)         __attribute ((weak, alias ("am_default_isr")));
-extern void am_mspi0_isr(void)        __attribute ((weak, alias ("am_default_isr")));
-extern void am_software0_isr(void)    __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_isr(void)       __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr0_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr1_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr2_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr3_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr4_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr5_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr6_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_stimer_cmpr7_isr(void) __attribute ((weak, alias ("am_default_isr")));
-extern void am_clkgen_isr(void)       __attribute ((weak, alias ("am_default_isr")));
-
-extern void am_default_isr(void)      __attribute ((weak));
+extern void am_default_isr(void) __attribute((weak));
 
 //*****************************************************************************
 //
@@ -118,61 +117,59 @@ extern void am_default_isr(void)      __attribute ((weak));
 // Therefore, we'll explicitly use am_fault_isr in the table for those vectors.
 //
 //*****************************************************************************
-__attribute__ ((section(".isr_vector")))
-void (* const g_am_pfnVectors[])(void) =
-{
-    &__stack,                               // The initial stack pointer
-    Reset_Handler,                          // The reset handler
-    NMI_Handler,                            // The NMI handler
-    HardFault_Handler,                      // The hard fault handler
-    MemManage_Handler,                      // The MemManage_Handler
-    BusFault_Handler,                       // The BusFault_Handler
-    UsageFault_Handler,                     // The UsageFault_Handler
-    SecureFault_Handler,                    // The SecureFault_Handler
-    0,                                      // Reserved
-    0,                                      // Reserved
-    0,                                      // Reserved
-    SVC_Handler,                            // SVCall handler
-    DebugMon_Handler,                       // Debug monitor handler
-    0,                                      // Reserved
-    PendSV_Handler,                         // The PendSV handler
-    SysTick_Handler,                        // The SysTick handler
+__attribute__((section(".isr_vector"))) void (*const g_am_pfnVectors[])(void) = {
+    (void (*)(void))__stack, // The initial stack pointer
+    Reset_Handler,           // The reset handler
+    NMI_Handler,             // The NMI handler
+    HardFault_Handler,       // The hard fault handler
+    MemManage_Handler,       // The MemManage_Handler
+    BusFault_Handler,        // The BusFault_Handler
+    UsageFault_Handler,      // The UsageFault_Handler
+    SecureFault_Handler,     // The SecureFault_Handler
+    0,                       // Reserved
+    0,                       // Reserved
+    0,                       // Reserved
+    SVC_Handler,             // SVCall handler
+    DebugMon_Handler,        // Debug monitor handler
+    0,                       // Reserved
+    PendSV_Handler,          // The PendSV handler
+    SysTick_Handler,         // The SysTick handler
 
     //
     // Peripheral Interrupts
     //
-    am_brownout_isr,                        //  0: Brownout (rstgen)
-    am_watchdog_isr,                        //  1: Watchdog
-    am_rtc_isr,                             //  2: RTC
-    am_vcomp_isr,                           //  3: Voltage Comparator
-    am_ioslave_ios_isr,                     //  4: I/O Slave general
-    am_ioslave_acc_isr,                     //  5: I/O Slave access
-    am_iomaster0_isr,                       //  6: I/O Master 0
-    am_iomaster1_isr,                       //  7: I/O Master 1
-    am_iomaster2_isr,                       //  8: I/O Master 2
-    am_iomaster3_isr,                       //  9: I/O Master 3
-    am_iomaster4_isr,                       // 10: I/O Master 4
-    am_iomaster5_isr,                       // 11: I/O Master 5
-    am_ble_isr,                             // 12: BLEIF
-    am_gpio_isr,                            // 13: GPIO
-    am_ctimer_isr,                          // 14: CTIMER
-    am_uart_isr,                            // 15: UART0
-    am_uart1_isr,                           // 16: UART1
-    am_scard_isr,                           // 17: SCARD
-    am_adc_isr,                             // 18: ADC
-    am_pdm0_isr,                            // 19: PDM
-    am_mspi0_isr,                           // 20: MSPI0
-    am_software0_isr,                       // 21: SOFTWARE0
-    am_stimer_isr,                          // 22: SYSTEM TIMER
-    am_stimer_cmpr0_isr,                    // 23: SYSTEM TIMER COMPARE0
-    am_stimer_cmpr1_isr,                    // 24: SYSTEM TIMER COMPARE1
-    am_stimer_cmpr2_isr,                    // 25: SYSTEM TIMER COMPARE2
-    am_stimer_cmpr3_isr,                    // 26: SYSTEM TIMER COMPARE3
-    am_stimer_cmpr4_isr,                    // 27: SYSTEM TIMER COMPARE4
-    am_stimer_cmpr5_isr,                    // 28: SYSTEM TIMER COMPARE5
-    am_stimer_cmpr6_isr,                    // 29: SYSTEM TIMER COMPARE6
-    am_stimer_cmpr7_isr,                    // 30: SYSTEM TIMER COMPARE7
-    am_clkgen_isr,                          // 31: CLKGEN
+    am_brownout_isr,     //  0: Brownout (rstgen)
+    am_watchdog_isr,     //  1: Watchdog
+    am_rtc_isr,          //  2: RTC
+    am_vcomp_isr,        //  3: Voltage Comparator
+    am_ioslave_ios_isr,  //  4: I/O Slave general
+    am_ioslave_acc_isr,  //  5: I/O Slave access
+    am_iomaster0_isr,    //  6: I/O Master 0
+    am_iomaster1_isr,    //  7: I/O Master 1
+    am_iomaster2_isr,    //  8: I/O Master 2
+    am_iomaster3_isr,    //  9: I/O Master 3
+    am_iomaster4_isr,    // 10: I/O Master 4
+    am_iomaster5_isr,    // 11: I/O Master 5
+    am_ble_isr,          // 12: BLEIF
+    am_gpio_isr,         // 13: GPIO
+    am_ctimer_isr,       // 14: CTIMER
+    am_uart_isr,         // 15: UART0
+    am_uart1_isr,        // 16: UART1
+    am_scard_isr,        // 17: SCARD
+    am_adc_isr,          // 18: ADC
+    am_pdm0_isr,         // 19: PDM
+    am_mspi0_isr,        // 20: MSPI0
+    am_software0_isr,    // 21: SOFTWARE0
+    am_stimer_isr,       // 22: SYSTEM TIMER
+    am_stimer_cmpr0_isr, // 23: SYSTEM TIMER COMPARE0
+    am_stimer_cmpr1_isr, // 24: SYSTEM TIMER COMPARE1
+    am_stimer_cmpr2_isr, // 25: SYSTEM TIMER COMPARE2
+    am_stimer_cmpr3_isr, // 26: SYSTEM TIMER COMPARE3
+    am_stimer_cmpr4_isr, // 27: SYSTEM TIMER COMPARE4
+    am_stimer_cmpr5_isr, // 28: SYSTEM TIMER COMPARE5
+    am_stimer_cmpr6_isr, // 29: SYSTEM TIMER COMPARE6
+    am_stimer_cmpr7_isr, // 30: SYSTEM TIMER COMPARE7
+    am_clkgen_isr,       // 31: CLKGEN
 };
 
 //******************************************************************************
@@ -188,66 +185,62 @@ void (* const g_am_pfnVectors[])(void) =
 // (16 core + 48 periph) such that code begins at offset 0x100.
 //
 //******************************************************************************
-__attribute__ ((section(".patch")))
-unsigned int const __Patchable[] =
-{
-    0,                                      // 32
-    0,                                      // 33
-    0,                                      // 34
-    0,                                      // 35
-    0,                                      // 36
-    0,                                      // 37
-    0,                                      // 38
-    0,                                      // 39
-    0,                                      // 40
-    0,                                      // 41
-    0,                                      // 42
-    0,                                      // 43
-    0,                                      // 44
-    0,                                      // 45
-    0,                                      // 46
-    0,                                      // 47
+__attribute__((section(".patch"))) unsigned int const __Patchable[] = {
+    0, // 32
+    0, // 33
+    0, // 34
+    0, // 35
+    0, // 36
+    0, // 37
+    0, // 38
+    0, // 39
+    0, // 40
+    0, // 41
+    0, // 42
+    0, // 43
+    0, // 44
+    0, // 45
+    0, // 46
+    0, // 47
 };
 
-void ram_init(void)
+static void data_init(void)
 {
-	unsigned int *pSrc, *pDest;
-	unsigned int *pTable __attribute__((unused));
-
-    pSrc  = (&__etext);
-    pDest = (&__data_start__);
-
-    for ( ; pDest < (&__data_end__) ; )
-    {
-        *pDest++ = *pSrc++;
-    }
-
-    pDest = &__bss_start__;
-
-    for ( ; pDest < (&__bss_end__) ; )
-    {
-        *pDest++ = 0ul;
-    }
+    __asm("ldr    r1, =_sidata\n"
+          "ldr    r2, =_sdata\n"
+          "ldr    r3, =_edata\n"
+          ".loop_data:\n"
+          "cmp    r2, r3\n"
+          "ittt   lt\n"
+          "ldrlt  r0, [r1], #4\n"
+          "strlt  r0, [r2], #4\n"
+          "blt    .loop_data\n");
 }
 
-void nvic_init(void)
+static void zero_bss(void)
 {
-    // TODO:  copy NVIC to RAM
-    /*
-    uint32_t *old_vectors = (uint32_t *)SCB->VTOR;
-    uint32_t *vectors = (uint32_t *)NVIC_RAM_VECTOR_ADDRESS;
-    for (int i = 0; i < NVIC_NUM_VECTORS; i++) {
-        vectors[i] = old_vectors[i];
-    }
-    SCB->VTOR = (uint32_t)NVIC_RAM_VECTOR_ADDRESS;
-    */
+    __asm("ldr    r1, =_sbss\n"
+          "ldr    r2, =_ebss\n"
+          "movs   r0, 0\n"
+          ".loop_bss:\n"
+          "cmp    r1, r2\n"
+          "itt    lt\n"
+          "strlt  r0, [r1], #4\n"
+          "blt    .loop_bss\n");
 }
 
 void Reset_Handler(void)
 {
-    ram_init();
-    nvic_init();
-    __libc_init_array();
+    __asm("ldr    sp,=__stack");
+    __asm("ldr    r0,=0xE000ED88\n"
+          "ldr    r1, [r0]\n"
+          "orr    r1, #0x00F00000\n"
+          "str    r1, [r0]\n"
+          "dsb\n"
+          "isb\n");
+
+    data_init();
+    zero_bss();
     main();
 }
 
@@ -258,13 +251,12 @@ void Reset_Handler(void)
 // by a debugger.
 //
 //*****************************************************************************
-void
-NMI_Handler(void)
+void NMI_Handler(void)
 {
     //
     // Go into an infinite loop.
     //
-    while(1)
+    while (1)
     {
     }
 }
@@ -276,13 +268,12 @@ NMI_Handler(void)
 // for examination by a debugger.
 //
 //*****************************************************************************
-void
-HardFault_Handler(void)
+void HardFault_Handler(void)
 {
     //
     // Go into an infinite loop.
     //
-    while(1)
+    while (1)
     {
     }
 }
@@ -294,13 +285,12 @@ HardFault_Handler(void)
 // for examination by a debugger.
 //
 //*****************************************************************************
-void
-am_default_isr(void)
+void am_default_isr(void)
 {
     //
     // Go into an infinite loop.
     //
-    while(1)
+    while (1)
     {
     }
 }

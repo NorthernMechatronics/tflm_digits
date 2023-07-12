@@ -42,7 +42,6 @@
 #include <task.h>
 
 #include "application_task.h"
-#include "console_task.h"
 
 //*****************************************************************************
 //

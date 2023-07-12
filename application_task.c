@@ -67,7 +67,7 @@ static void application_task(void *parameter)
     application_setup_task();
     while (1)
     {
-        vTaskDelay(50);
+        vTaskDelay(500);
         am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
     }
 }

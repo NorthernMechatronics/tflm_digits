@@ -26,7 +26,7 @@ FLASH_START = 0x0000C000;
 FLASH_SIZE  = 0x00100000;
 RAM_START   = 0x10000000;
 RAM_SIZE    = 0x00060000;
-STACK_SIZE  = 0x00001000;
+STACK_SIZE  = 0x00002000;
 VECTORS_SIZE = 0x100;
 
 MEMORY
@@ -105,7 +105,8 @@ SECTIONS
   } > FLASH
   __exidx_end = .;
 
-  __etext = .;
+  _etext = .;
+  _sidata = .;
 
   .stack (NOLOAD):
   {
@@ -116,21 +117,21 @@ SECTIONS
         __StackTop = .;
   } > RAM
   __StackLimit = RAM_START;
-  PROVIDE(__stack = __StackTop - 8);
+  PROVIDE(__stack = __StackTop);
 
-  .vectors (NOLOAD):
-  {
-    __vectors_start__ = .;
-    *(.vectors*)
-    . += VECTORS_SIZE;
-    __vectors_end__ = .;
-  } > RAM
-
-  .data : AT (__etext)
+  .data : AT (_etext)
   {
     __data_start__ = .;
+    _sdata = .;
+
+    PROVIDE(__vectors_start__ = .);
+    . += VECTORS_SIZE;
+    PROVIDE(__vectors_end__ = .);
+
     *(vtable)
     *(.data*)
+    . = ALIGN(8);
+    *(.ram)
 
     . = ALIGN(8);
     /* preinit data */
@@ -156,7 +157,20 @@ SECTIONS
     KEEP(*(.jcr*))
     . = ALIGN(8);
     __data_end__ = .;
+    _edata = .;
 
+  } > RAM
+
+  .bss :
+  {
+    . = ALIGN(8);
+    __bss_start__ = .;
+    _sbss = .;
+    *(.bss*)
+    *(COMMON)
+    . = ALIGN(8);
+    __bss_end__ = .;
+    _ebss = .;
   } > RAM
 
   .uninitialized (NOLOAD):
@@ -169,24 +183,14 @@ SECTIONS
       __uninitialized_end = .;
   } > RAM
 
-  .bss :
-  {
-    . = ALIGN(8);
-    __bss_start__ = .;
-    *(.bss*)
-    *(COMMON)
-    . = ALIGN(8);
-    __bss_end__ = .;
-  } > RAM
-
   .heap (COPY):
   {
+    __HeapBase = .;
     __end__ = .;
     PROVIDE(end = .);
     *(.heap*)
-    __HeapBase = .;
     . = ORIGIN(RAM) + LENGTH(RAM);
     __HeapLimit = .;
   } > RAM
+  PROVIDE(HEAP_SIZE = __HeapLimit - __HeapBase);
 }
-PROVIDE(HEAP_SIZE = __HeapLimit - __HeapBase);
