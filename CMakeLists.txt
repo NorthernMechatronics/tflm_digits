@@ -19,6 +19,7 @@ target_link_libraries(
         rtos
         bsp
         hal
+        tflm
     PUBLIC
 #        -T${PROJECT_SOURCE_DIR}/AMA3B1KK.ld
         -T${TARGET_LINK_SCRIPT}
