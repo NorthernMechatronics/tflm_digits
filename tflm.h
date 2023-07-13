@@ -29,54 +29,19 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <am_mcu_apollo.h>
-#include <am_util.h>
+#ifndef _TFLM_H_
+#define _TFLM_H_
 
-#include <FreeRTOS.h>
-#include <task.h>
-
-#include <am_bsp.h>
-
-#include "application_task.h"
-#include "application_task_cli.h"
-
-#include "tflm.h"
-
-static TaskHandle_t application_task_handle;
-
-static void application_setup_task()
+#ifdef __cplusplus
+extern "C"
 {
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED0, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_CLEAR);
+#endif
 
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED1, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_CLEAR);
+extern void tflm_setup(void);
+extern void tflm_loop(void);
 
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED2, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED2, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED3, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED3, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED4, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
+#ifdef __cplusplus
 }
+#endif
 
-static void application_task(void *parameter)
-{
-    application_task_cli_register();
-
-    application_setup_task();
-    tflm_setup();
-    while (1)
-    {
-        tflm_loop();
-        vTaskDelay(500);
-        am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
-    }
-}
-
-void application_task_create(uint32_t priority)
-{
-    xTaskCreate(application_task, "application", 512, 0, priority, &application_task_handle);
-}
+#endif

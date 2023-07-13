@@ -21,7 +21,6 @@ target_link_libraries(
         hal
         tflm
     PUBLIC
-#        -T${PROJECT_SOURCE_DIR}/AMA3B1KK.ld
         -T${TARGET_LINK_SCRIPT}
         -Wl,--start-group
         -lstdc++
@@ -36,6 +35,10 @@ target_link_libraries(
 target_compile_definitions(
     ${APPLICATION}
     PRIVATE
+	-DGEMMLOWP_ALLOW_SLOW_SCALAR_FALLBACK
+    -DTF_LITE_STATIC_MEMORY
+    -DTF_LITE_MCU_DEBUG_LOG
+    -DARM_MATH_CM4
 )
 
 target_include_directories(
@@ -43,6 +46,8 @@ target_include_directories(
     PRIVATE
     ${HAL_INCLUDES}
     ${RTOS_INCLUDES}
+    ${TFLM_INCLUDES}
+
     ${PROJECT_SOURCE_DIR}/bsp
     ${PROJECT_SOURCE_DIR}/bsp/${BSP_TARGET}
     ${PROJECT_SOURCE_DIR}
@@ -60,6 +65,11 @@ target_sources(
     application_task.c
     console_task.c
 
+    constants.cc
+    model.cc
+    output_handler.cc
+    tflm.cc
+
     utils/RTT/RTT/SEGGER_RTT.c
     utils/RTT/RTT/SEGGER_RTT_printf.c
 )
@@ -70,4 +80,4 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE_NAME:${APPLICATION}> $<TARGET_FILE_NAME:${APPLICATION}>.bin
 )
 
-add_dependencies(${APPLICATION} hal bsp rtos)
+add_dependencies(${APPLICATION} hal bsp rtos tflm)

@@ -12,4 +12,9 @@
         "-DRAT_BLE_ENABLE=OFF"
     ],
     "cmake.generator": "Unix Makefiles",
+    "files.associations": {
+        "am_mcu_apollo.h": "c",
+        "am_util.h": "c",
+        "am_util_delay.h": "c"
+    },
 }
