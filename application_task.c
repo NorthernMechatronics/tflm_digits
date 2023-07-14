@@ -118,6 +118,17 @@ static void camera_stop_preview(void)
     arducamUartWrite(0xBB);
 }
 
+static void camera_setup()
+{
+    console_register_custom_process_trigger(0x55, 0xAA);
+    console_register_custom_process(camera_process);
+    command_length = 0;
+    memset(command_buffer, 0, COMMAND_BUFFER_LEN);
+    camera = createArducamCamera(1);
+    begin(&camera);
+    registerCallback(&camera, camera_read_buffer, 200, camera_stop_preview);
+}
+
 static void application_setup_task()
 {
     am_hal_gpio_pinconfig(AM_BSP_GPIO_LED0, g_AM_HAL_GPIO_OUTPUT);
@@ -134,14 +145,6 @@ static void application_setup_task()
 
     am_hal_gpio_pinconfig(AM_BSP_GPIO_LED4, g_AM_HAL_GPIO_OUTPUT);
     am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    console_register_custom_process_trigger(0x55, 0xAA);
-    console_register_custom_process(camera_process);
-    command_length = 0;
-    memset(command_buffer, 0, COMMAND_BUFFER_LEN);
-    camera = createArducamCamera(1);
-    begin(&camera);
-    registerCallback(&camera, camera_read_buffer, 200, camera_stop_preview);
 }
 
 static void application_task(void *parameter)
@@ -149,11 +152,11 @@ static void application_task(void *parameter)
     application_task_cli_register();
 
     application_setup_task();
-
+    camera_setup();
     while (1)
     {
         captureThread(&camera);
-        vTaskDelay(500);
+        vTaskDelay(50);
         am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
     }
 }
