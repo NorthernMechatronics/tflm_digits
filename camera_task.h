@@ -32,6 +32,22 @@
 #ifndef _CAMERA_TASK_H_
 #define _CAMERA_TASK_H_
 
+#include <stdint.h>
+
+typedef enum camera_command_e {
+    CAMERA_COMMAND_STREAM_START,
+    CAMERA_COMMAND_STREAM_STOP,
+    CAMERA_COMMAND_STREAM_REFRESH,
+    CAMERA_COMMAND_NONE
+} camera_command_t;
+
+typedef struct camera_message_s
+{
+    camera_command_t command;
+    void *payload;
+} camera_message_t;
+
 extern void camera_task_create(uint32_t priority);
+extern void camera_task_send(camera_message_t *message);
 
 #endif
