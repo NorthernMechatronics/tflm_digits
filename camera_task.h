@@ -1,7 +1,7 @@
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Northern Mechatronics, Inc.
+ * Copyright (c) 2023, Northern Mechatronics, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,52 +29,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <string.h>
+#ifndef _CAMERA_TASK_H_
+#define _CAMERA_TASK_H_
 
-#include <am_mcu_apollo.h>
-#include <am_util.h>
+extern void camera_task_create(uint32_t priority);
 
-#include <FreeRTOS.h>
-#include <task.h>
-
-#include <am_bsp.h>
-
-#include "application_task.h"
-#include "application_task_cli.h"
-
-static TaskHandle_t application_task_handle;
-
-static void application_setup_task()
-{
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED0, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED1, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED2, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED2, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED3, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED3, AM_HAL_GPIO_OUTPUT_CLEAR);
-
-    am_hal_gpio_pinconfig(AM_BSP_GPIO_LED4, g_AM_HAL_GPIO_OUTPUT);
-    am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
-}
-
-static void application_task(void *parameter)
-{
-    application_task_cli_register();
-
-    application_setup_task();
-    while (1)
-    {
-        vTaskDelay(500);
-        am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
-    }
-}
-
-void application_task_create(uint32_t priority)
-{
-    xTaskCreate(application_task, "application", 512, 0, priority, &application_task_handle);
-}
+#endif
