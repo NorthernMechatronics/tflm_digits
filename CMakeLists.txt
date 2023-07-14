@@ -78,6 +78,11 @@ target_sources(
 #    model.cc
 #    output_handler.cc
 #    tflm.cc
+    constants.cc
+    model.cc
+    svhn_model.cc
+    output_handler.cc
+    tflm.cc
 
     utils/RTT/RTT/SEGGER_RTT.c
     utils/RTT/RTT/SEGGER_RTT_printf.c

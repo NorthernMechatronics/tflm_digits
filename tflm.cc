@@ -37,7 +37,24 @@
 
 #include "constants.h"
 #include "model.h"
+#include "svhn_model.h"
 #include "output_handler.h"
+
+#include "model_settings.h"
+#include <cstdint>
+
+#include "test_images/Number_0_Light.h"
+#include "test_images/Number_1_Light.h"
+#include "test_images/Number_2_Light.h"
+#include "test_images/Number_3_Light.h"
+#include "test_images/Number_4_Light.h"
+#include "test_images/Number_5_Light.h"
+#include "test_images/Number_6_Light.h"
+#include "test_images/Number_7_Light.h"
+#include "test_images/Number_8_Light.h"
+#include "test_images/Number_9_Light.h"
+
+
 
 #include "tflm.h"
 
@@ -50,17 +67,16 @@ TfLiteTensor *input = nullptr;
 TfLiteTensor *output = nullptr;
 int inference_count = 0;
 
-constexpr int kTensorArenaSize = 2000;
-uint8_t tensor_arena[kTensorArenaSize];
+constexpr int kTensorArenaSize = 136 * 1024;
+alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 } // namespace
 
-void tflm_setup()
-{
+void tflm_setup() {
     tflite::InitializeTarget();
     static tflite::MicroErrorReporter micro_error_reporter;
 
     error_reporter = &micro_error_reporter;
-    model = tflite::GetModel(g_model);
+    model = tflite::GetModel(tf_quant_model_july_13_2_tflite);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         TF_LITE_REPORT_ERROR(error_reporter,
@@ -89,44 +105,43 @@ void tflm_setup()
     input = interpreter->input(0);
     output = interpreter->output(0);
 
+    TF_LITE_REPORT_ERROR(error_reporter, "The input type was %s", TfLiteTypeGetName(input->type));
+    TF_LITE_REPORT_ERROR(error_reporter, "Size: %d", input->dims->size);
+    TF_LITE_REPORT_ERROR(error_reporter, "Type of tensor: %s", TfLiteTypeGetName(input->type));
+    TF_LITE_REPORT_ERROR(error_reporter, "First shape: %d", input->dims->data[0]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Number of rows: %d", input->dims->data[1]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Number of columns: %d", input->dims->data[2]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Number of channels: %d", input->dims->data[3]);
+
     // Keep track of how many inferences we have performed.
     inference_count = 0;
+
+    TF_LITE_REPORT_ERROR(error_reporter, "Completed setup");
 }
 
-void tflm_loop()
-{
-    // Calculate an x value to feed into the model. We compare the current
-    // inference_count to the number of inferences per cycle to determine
-    // our position within the range of possible x values the model was
-    // trained on, and use this to calculate a value.
-    float position = static_cast<float>(inference_count) / static_cast<float>(kInferencesPerCycle);
-    float x = position * kXrange;
 
-    // Quantize the input from floating-point to integer
-    int8_t x_quantized = x / input->params.scale + input->params.zero_point;
-    // Place the quantized input in the model's input tensor
-    input->data.int8[0] = x_quantized;
-
-    // Run inference, and report any error
+void tflm_loop() {
+    memcpy(input->data.int8, Number_3_Light, input->bytes);
     TfLiteStatus invoke_status = interpreter->Invoke();
-    if (invoke_status != kTfLiteOk)
-    {
-        TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed on x: %f\n", static_cast<double>(x));
-        return;
+    if (invoke_status != kTfLiteOk) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed\n");
     }
+    output = interpreter->output(0);
 
-    // Obtain the quantized output from model's output tensor
-    int8_t y_quantized = output->data.int8[0];
-    // Dequantize the output from integer to floating-point
-    float y = (y_quantized - output->params.zero_point) * output->params.scale;
+    TF_LITE_REPORT_ERROR(error_reporter, "Size of output tensor: %d", output->dims->size);
+    TF_LITE_REPORT_ERROR(error_reporter, "Shape: %d", output->dims->data[0]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Number of categories: %d", output->dims->data[1]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Completed inference");
 
-    // Output the results. A custom HandleOutput function can be implemented
-    // for each supported hardware target.
-    HandleOutput(error_reporter, x, y);
 
-    // Increment the inference_counter, and reset it if we have reached
-    // the total number per cycle
-    inference_count += 1;
-    if (inference_count >= kInferencesPerCycle)
-        inference_count = 0;
+    TF_LITE_REPORT_ERROR(error_reporter, "Zero score: %d", output->data.int8[kZeroIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "One score: %d", output->data.int8[kOneIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Two score: %d", output->data.int8[kTwoIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Three score: %d", output->data.int8[kThreeIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Four score: %d", output->data.int8[kFourIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Five score: %d", output->data.int8[kFiveIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Six score: %d", output->data.int8[kSixIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Seven score: %d", output->data.int8[kSevenIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Eight score: %d", output->data.int8[kEightIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Nine score: %d", output->data.int8[kNineIndex]);
 }
