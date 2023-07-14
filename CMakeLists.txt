@@ -54,6 +54,8 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/config
     ${PROJECT_SOURCE_DIR}/utils/RTT/Config
     ${PROJECT_SOURCE_DIR}/utils/RTT/RTT
+
+    ${PROJECT_SOURCE_DIR}/drivers/arducam
 )
 
 target_sources(
@@ -64,6 +66,8 @@ target_sources(
     application_task_cli.c
     application_task.c
     console_task.c
+
+    drivers/arducam/arducam_mega.c
 
     constants.cc
     model.cc

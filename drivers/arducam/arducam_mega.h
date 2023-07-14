@@ -1,7 +1,7 @@
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Northern Mechatronics, Inc.
+ * Copyright (c) 2023, Northern Mechatronics, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,14 +29,58 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <string.h>
+#ifndef _ARDUCAM_MEGA_H_
+#define _ARDUCAM_MEGA_H_
 
-#include <am_mcu_apollo.h>
-#include <am_util.h>
+#include <stdbool.h>
+#include <stdint.h>
 
-#include <am_bsp.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <FreeRTOS.h>
-#include <stream_buffer.h>
-#include <task.h>
+typedef struct arducam_mega_interface_t
+{
+    void (*wake)(void);
+    void (*sleep)(void);
+    uint32_t (*reg_read)(uint8_t address, uint8_t *value, size_t size, bool persist);
+    uint32_t (*reg_write)(uint8_t address, uint8_t *value, size_t size, bool persist);
+    uint32_t (*buf_read)(uint8_t *value, size_t size, bool persist);
+    void (*delay_ms)(uint32_t value);
+} arducam_mega_interface_t;
 
+typedef struct arducam_mega_info_t
+{
+    char    *model;
+    uint32_t resolutions;
+    uint32_t effects;
+    uint32_t exposureMax;
+    uint32_t exposureMin;
+    uint32_t gainMax;
+    uint32_t gainMin;
+    uint32_t focus;
+    uint32_t sharpness;
+    uint32_t address;
+    uint8_t id;
+    uint8_t year;
+    uint8_t month;
+    uint8_t day;
+    uint8_t version;
+} arducam_mega_info_t;
+
+void arducam_mega_setup(arducam_mega_interface_t *interface);
+void arducam_mega_wake(void);
+void arducam_mega_sleep(void);
+uint32_t arducam_mega_ready(void);
+
+void arducam_mega_capture_blocking();
+void arducam_mega_capture_config(uint8_t mode, uint8_t format);
+uint32_t arducam_mega_capture_done();
+uint32_t arducam_mega_capture_length();
+void arducam_mega_capture_read(uint8_t *buffer, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
