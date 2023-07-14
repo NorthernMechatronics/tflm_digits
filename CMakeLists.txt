@@ -67,6 +67,7 @@ target_sources(
 
     constants.cc
     model.cc
+    svhn_model.cc
     output_handler.cc
     tflm.cc
 
