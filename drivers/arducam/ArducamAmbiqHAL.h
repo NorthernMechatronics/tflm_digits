@@ -29,28 +29,19 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _CONSOLE_TASK_H_
-#define _CONSOLE_TASK_H_
+#ifndef _ARDUCAM_AMBIQ_HAL_H_
+#define _ARDUCAM_AMBIQ_HAL_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-typedef enum
-{
-    CONSOLE_OUTPUT_UART,
-    CONSOLE_OUTPUT_RTT,
-} console_output_e;
+void camera_wake();
+void camera_sleep();
+void camera_delay_ms(uint32_t delay);
 
-typedef void (*console_custom_process)(uint8_t ch);
-
-extern void console_task_create(uint32_t priority, console_output_e output);
-extern void console_print_prompt();
-extern void console_register_custom_process_trigger(uint8_t start, uint8_t end);
-extern void console_register_custom_process(console_custom_process hook);
-
-#ifdef __cplusplus
-}
-#endif
+uint32_t camera_reg_read(uint8_t address, uint8_t *value, size_t length, bool persist);
+uint32_t camera_reg_write(uint8_t address, uint8_t *value, size_t length, bool persist);
+uint32_t camera_buf_read(uint8_t *value, size_t length, bool persist);
 
 #endif

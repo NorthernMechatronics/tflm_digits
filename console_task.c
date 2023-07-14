@@ -78,6 +78,10 @@ static uint8_t cmd_hist_len = 0;
 static uint8_t cmd_hist_first = 0;
 static uint8_t cmd_hist_last = 0;
 static uint8_t cmd_hist_cur = 0;
+static uint32_t cmd_process_mode = 0;
+static uint8_t cmd_custom_trigger_start = 0;
+static uint8_t cmd_custom_trigger_end = 0;
+static console_custom_process cmd_custom_hook;
 
 static const char crlf[] = "\r\n";
 
@@ -196,107 +200,141 @@ static void console_task_setup(void)
 
         stream_buffer = xStreamBufferCreate(STREAM_BUFFER_SIZE, 1);
     }
+
+    cmd_hist_len = 0;
+    cmd_hist_first = 0;
+    cmd_hist_last = 0;
+    cmd_hist_cur = 0;
+    cmd_process_mode = 0;
+    cmd_size = 0;
+    cmd_custom_trigger_start = 0;
+    cmd_custom_trigger_end = 0;
+    cmd_custom_hook = 0;
+}
+
+static void console_process_text(char *out_str, uint8_t ch)
+{
+    portBASE_TYPE ret;
+
+    switch ((uint8_t)ch)
+    {
+    case '\e':
+        ch = console_read();
+        ch = console_read();
+        if (ch == 'A')
+        {
+            const char *cmd = console_cmd_hist_prev();
+
+            console_clear_line(cmd_size);
+            if (cmd != NULL)
+            {
+                strcpy(cmd_buffer, cmd);
+                am_util_stdio_printf(cmd_buffer);
+                cmd_size = strlen(cmd_buffer);
+            }
+            else
+            {
+                cmd_size = 0;
+            }
+        }
+        else if (ch == 'B')
+        {
+            const char *cmd = console_cmd_hist_next();
+
+            console_clear_line(cmd_size);
+            if (cmd != NULL)
+            {
+                strcpy(cmd_buffer, cmd);
+                am_util_stdio_printf(cmd_buffer);
+                cmd_size = strlen(cmd_buffer);
+            }
+            else
+            {
+                cmd_size = 0;
+            }
+        }
+        break;
+
+    case '\b':
+    case '\x7f':
+        if (cmd_size > 0)
+        {
+            console_clear_line(cmd_size--);
+
+            cmd_buffer[cmd_size] = '\0';
+            am_util_stdio_printf(cmd_buffer);
+        }
+        break;
+
+    case '\r':
+    case '\n':
+        am_util_stdio_printf(crlf);
+        if (cmd_size == 0)
+        {
+            console_print_prompt();
+            cmd_hist_cur = cmd_hist_last;
+            break;
+        }
+
+        do
+        {
+            ret = FreeRTOS_CLIProcessCommand(
+                cmd_buffer, out_str, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+            am_util_stdio_printf(out_str);
+        } while (ret != pdFALSE);
+
+        am_util_stdio_printf(crlf);
+        console_print_prompt();
+
+        console_cmd_hist_add(cmd_buffer, cmd_size);
+        cmd_size = 0;
+        memset(cmd_buffer, 0x00, MAX_INPUT_LEN);
+        break;
+
+    default:
+        am_util_stdio_printf("%c", ch);
+
+        if ((ch >= ' ') && (ch <= '~'))
+        {
+            if (cmd_size < MAX_INPUT_LEN)
+            {
+                cmd_buffer[cmd_size] = ch;
+                cmd_size++;
+            }
+        }
+        break;
+    }
 }
 
 static void console_task(void *parameter)
 {
-    char ch;
     char *out_str;
-    portBASE_TYPE ret;
-
     out_str = FreeRTOS_CLIGetOutputBuffer();
 
     while (1)
     {
-        ch = console_read();
-
-        switch ((uint8_t)ch)
+        uint8_t ch = console_read();
+        if ((cmd_size == 0) && (cmd_custom_trigger_start > 0))
         {
-        case '\e':
-            ch = console_read();
-            ch = console_read();
-            if (ch == 'A')
+            if (ch == cmd_custom_trigger_start)
             {
-                const char *cmd = console_cmd_hist_prev();
-
-                console_clear_line(cmd_size);
-                if (cmd != NULL)
-                {
-                    strcpy(cmd_buffer, cmd);
-                    am_util_stdio_printf(cmd_buffer);
-                    cmd_size = strlen(cmd_buffer);
-                }
-                else
-                {
-                    cmd_size = 0;
-                }
+                cmd_process_mode = 1;
             }
-            else if (ch == 'B')
+        }
+        if (cmd_process_mode)
+        {
+            if (ch == cmd_custom_trigger_end)
             {
-                const char *cmd = console_cmd_hist_next();
-
-                console_clear_line(cmd_size);
-                if (cmd != NULL)
-                {
-                    strcpy(cmd_buffer, cmd);
-                    am_util_stdio_printf(cmd_buffer);
-                    cmd_size = strlen(cmd_buffer);
-                }
-                else
-                {
-                    cmd_size = 0;
-                }
+                cmd_process_mode = 0;
             }
-            break;
-
-        case '\b':
-        case '\x7f':
-            if (cmd_size > 0)
+            if (cmd_custom_hook)
             {
-                console_clear_line(cmd_size--);
-
-                cmd_buffer[cmd_size] = '\0';
-                am_util_stdio_printf(cmd_buffer);
+                cmd_custom_hook(ch);
             }
-            break;
-
-        case '\r':
-        case '\n':
-            am_util_stdio_printf(crlf);
-            if (cmd_size == 0)
-            {
-                console_print_prompt();
-                cmd_hist_cur = cmd_hist_last;
-                break;
-            }
-
-            do
-            {
-                ret = FreeRTOS_CLIProcessCommand(
-                    cmd_buffer, out_str, configCOMMAND_INT_MAX_OUTPUT_SIZE);
-                am_util_stdio_printf(out_str);
-            } while (ret != pdFALSE);
-
-            am_util_stdio_printf(crlf);
-            console_print_prompt();
-
-            console_cmd_hist_add(cmd_buffer, cmd_size);
-            cmd_size = 0;
-            memset(cmd_buffer, 0x00, MAX_INPUT_LEN);
-            break;
-
-        default:
-            am_util_stdio_printf("%c", ch);
-
-            if ((ch >= ' ') && (ch <= '~'))
-            {
-                if (cmd_size < MAX_INPUT_LEN)
-                {
-                    cmd_buffer[cmd_size] = ch;
-                    cmd_size++;
-                }
-            }
-            break;
+        }
+        else
+        {
+            console_process_text(out_str, ch);
         }
     }
 }
@@ -325,6 +363,17 @@ void console_print_prompt()
 
     am_util_stdio_printf("%02d:%02d:%02d.%03d ", hours, minutes, seconds, subseconds);
     am_util_stdio_printf(cmd_prompt);
+}
+
+void console_register_custom_process_trigger(uint8_t start, uint8_t end)
+{
+    cmd_custom_trigger_start = start;
+    cmd_custom_trigger_end = end;
+}
+
+void console_register_custom_process(console_custom_process hook)
+{
+    cmd_custom_hook = hook;
 }
 
 void am_uart_isr()

@@ -33,6 +33,7 @@
 #define _ARDUCAM_MEGA_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -72,12 +73,18 @@ void arducam_mega_setup(arducam_mega_interface_t *interface);
 void arducam_mega_wake(void);
 void arducam_mega_sleep(void);
 uint32_t arducam_mega_ready(void);
-
 void arducam_mega_capture_blocking();
 void arducam_mega_capture_config(uint8_t mode, uint8_t format);
 uint32_t arducam_mega_capture_done();
 uint32_t arducam_mega_capture_length();
 void arducam_mega_capture_read(uint8_t *buffer, size_t size);
+
+void arducam_mega_reset(void);
+
+void arducam_mega_set_exposure(uint32_t val);
+void arducam_mega_set_focus(uint32_t);
+void arducam_mega_set_iso(uint32_t);
+void arducam_mega_set_whitebalance(uint32_t);
 
 #ifdef __cplusplus
 }

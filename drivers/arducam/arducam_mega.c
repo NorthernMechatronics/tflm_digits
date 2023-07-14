@@ -324,3 +324,26 @@ void arducam_mega_capture_read(uint8_t *buffer, size_t size)
         arducam_mega_interface.reg_read(BURST_FIFO_READ, buffer, size, false);
     }
 }
+
+void arducam_mega_reset(void)
+{
+    arducam_mega_reg_write(CAM_REG_SENSOR_RESET, CAM_SENSOR_RESET_ENABLE);
+    arducam_mega_wait();
+}
+
+void arducam_mega_set_exposure(uint32_t val)
+{
+    unsigned char symbol = 0;
+    if (val == TRUE)
+    {
+        symbol |= 0x80;
+    }
+    symbol |= SET_EXPOSURE;
+    arducam_mega_interface.reg_write(CAM_REG_EXPOSURE_GAIN_WHITEBALANCE_CONTROL, &symbol, 1, false);
+    arducam_mega_wait();
+}
+
+void arducam_mega_set_focus(uint32_t);
+void arducam_mega_set_iso(uint32_t);
+void arducam_mega_set_whitebalance(uint32_t);
+

@@ -40,3 +40,94 @@
 #include <stream_buffer.h>
 #include <task.h>
 
+static void *iom_handle;
+
+void camera_delay_ms(uint32_t delay)
+{
+    am_util_delay_ms(delay);
+}
+
+void camera_wake()
+{
+    am_hal_iom_config_t config;
+    config.eInterfaceMode = AM_HAL_IOM_SPI_MODE;
+    config.ui32ClockFreq = AM_HAL_IOM_1MHZ;
+    config.eSpiMode = AM_HAL_IOM_SPI_MODE_0;
+
+    am_bsp_iom_pins_enable(0, AM_HAL_IOM_SPI_MODE);
+    am_hal_iom_initialize(0, &iom_handle);
+    am_hal_iom_power_ctrl(iom_handle, AM_HAL_SYSCTRL_WAKE, false);
+    am_hal_iom_configure(iom_handle, &config);
+    am_hal_iom_enable(iom_handle);
+}
+
+void camera_sleep()
+{
+    am_hal_iom_disable(iom_handle);
+    am_hal_iom_power_ctrl(iom_handle, AM_HAL_SYSCTRL_DEEPSLEEP, false);
+    am_bsp_iom_pins_disable(0, AM_HAL_IOM_SPI_MODE);
+}
+
+uint32_t camera_reg_read(uint8_t address, uint8_t *value, size_t length, bool persist)
+{
+    am_hal_iom_transfer_t transfer;
+
+    uint32_t instr = address & 0x7F;
+
+    transfer.ui32InstrLen = 1;
+    transfer.ui32Instr = instr;
+    transfer.eDirection = AM_HAL_IOM_RX;
+    transfer.ui32NumBytes = length;
+    transfer.pui32RxBuffer = (uint32_t *)value;
+    transfer.bContinue = persist;
+    transfer.ui8RepeatCount = 0;
+    transfer.ui32PauseCondition = 0;
+    transfer.ui32StatusSetClr = 0;
+    transfer.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+
+    uint32_t status = am_hal_iom_blocking_transfer(iom_handle, &transfer);
+
+    return status;
+}
+
+uint32_t camera_reg_write(uint8_t address, uint8_t *value, size_t length, bool persist)
+{
+    am_hal_iom_transfer_t transfer;
+
+    uint32_t instr = address | 0x80;
+
+    transfer.ui32InstrLen = 1;
+    transfer.ui32Instr = instr;
+    transfer.eDirection = AM_HAL_IOM_TX;
+    transfer.ui32NumBytes = length;
+    transfer.pui32TxBuffer = (uint32_t *)value;
+    transfer.bContinue = persist;
+    transfer.ui8RepeatCount = 0;
+    transfer.ui32PauseCondition = 0;
+    transfer.ui32StatusSetClr = 0;
+    transfer.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+
+    uint32_t status = am_hal_iom_blocking_transfer(iom_handle, &transfer);
+    return status;
+}
+
+uint32_t camera_buf_read(uint8_t *value, size_t length, bool persist)
+{
+    am_hal_iom_transfer_t transfer;
+
+    transfer.ui32InstrLen = 0;
+    transfer.ui32Instr = 0;
+    transfer.eDirection = AM_HAL_IOM_RX;
+    transfer.ui32NumBytes = length;
+    transfer.pui32RxBuffer = (uint32_t *)value;
+    transfer.bContinue = persist;
+    transfer.ui8RepeatCount = 0;
+    transfer.ui32PauseCondition = 0;
+    transfer.ui32StatusSetClr = 0;
+    transfer.uPeerInfo.ui32SpiChipSelect = AM_BSP_IOM0_CS_CHNL;
+
+    uint32_t status = am_hal_iom_blocking_transfer(iom_handle, &transfer);
+
+    return status;
+}
+

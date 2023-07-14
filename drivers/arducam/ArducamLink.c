@@ -10,6 +10,7 @@
 #include "ArducamUart.h"
 
 #include "string.h"
+
 void arducamUartBegin(uint32_t baudRate)
 {
     SerialBegin(baudRate);

@@ -67,12 +67,15 @@ target_sources(
     application_task.c
     console_task.c
 
-    drivers/arducam/arducam_mega.c
+    drivers/arducam/ArducamAmbiqHAL.c
+    drivers/arducam/ArducamCamera.c
+    drivers/arducam/ArducamLink.c
+    drivers/arducam/ArducamUart.c
 
-    constants.cc
-    model.cc
-    output_handler.cc
-    tflm.cc
+#    constants.cc
+#    model.cc
+#    output_handler.cc
+#    tflm.cc
 
     utils/RTT/RTT/SEGGER_RTT.c
     utils/RTT/RTT/SEGGER_RTT_printf.c
