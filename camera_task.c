@@ -348,6 +348,7 @@ static void camera_task(void *parameter)
                     (CAM_IMAGE_MODE)message.payload.capture_parameters.resolution,
                     (CAM_IMAGE_PIX_FMT)message.payload.capture_parameters.format);
                 memset(image_rgb888, 0, IMAGE_SIZE);
+                camera_retrieve_still();
                 break;
 
             case CAMERA_COMMAND_STILL_RETRIEVE:
