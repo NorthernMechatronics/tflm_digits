@@ -29,40 +29,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _CAMERA_TASK_H_
-#define _CAMERA_TASK_H_
+#ifndef _CAMERA_TASK_CLI_H_
+#define _CAMERA_TASK_CLI_H_
 
-#include <stdint.h>
-
-typedef enum camera_command_e {
-    CAMERA_COMMAND_STREAM_START,
-    CAMERA_COMMAND_STREAM_STOP,
-    CAMERA_COMMAND_STREAM_REFRESH,
-    CAMERA_COMMAND_STILL_CAPTURE,
-    CAMERA_COMMAND_STILL_RETRIEVE,
-    CAMERA_COMMAND_NONE
-} camera_command_t;
-
-typedef struct camera_capture_parameters_s
-{
-    uint16_t resolution;
-    uint16_t format;
-} camera_capture_parameters_t;
-
-typedef union camera_message_payload_u
-{
-    uint8_t *buffer;
-    camera_capture_parameters_t capture_parameters;
-} camera_message_payload_t;
-
-typedef struct camera_message_s
-{
-    camera_command_t command;
-    camera_message_payload_t payload;
-} camera_message_t;
-
-extern void camera_task_create(uint32_t priority);
-extern void camera_task_send(camera_message_t *message);
-extern uint32_t camera_get_capture_length(void);
+extern void camera_task_cli_register();
 
 #endif

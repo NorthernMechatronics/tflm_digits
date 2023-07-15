@@ -66,6 +66,7 @@ target_sources(
     application_task_cli.c
     application_task.c
     camera_task.c
+    camera_task_cli.c
     console_task.c
 
     drivers/arducam/ArducamAmbiqHAL.c

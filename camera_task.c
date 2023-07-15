@@ -45,6 +45,7 @@
 #include "ArducamLink.h"
 
 #include "camera_task.h"
+#include "camera_task_cli.h"
 #include "console_task.h"
 
 #define COMMAND_BUFFER_LEN (64)
@@ -55,10 +56,13 @@ static uint8_t command_length;
 static uint8_t sendFlag = TRUE;
 static uint32_t camera_stream_read = 0;
 static uint8_t camera_stream_started = 0;
+static uint32_t camera_capture_length = 0;
 
 static TaskHandle_t camera_task_handle;
 static QueueHandle_t camera_queue_handle;
 static TimerHandle_t camera_timer_handle;
+
+static uint8_t test[255];
 
 uint8_t camera_process_command(ArducamCamera *cam, uint8_t *command)
 {
@@ -148,6 +152,8 @@ uint8_t camera_process_command(ArducamCamera *cam, uint8_t *command)
         debugWriteRegister(cam, command + 1);
         break;
     case STOP_STREAM:
+        message.command = CAMERA_COMMAND_STREAM_STOP;
+        camera_task_send(&message);
         stopPreview(cam);
         break;
     case GET_FRM_VER_INFO: // Get Firmware version info
@@ -216,10 +222,6 @@ static uint8_t camera_read_buffer(uint8_t *image, uint8_t length)
 
 static void camera_stop_preview(void)
 {
-    camera_message_t message;
-    message.command = CAMERA_COMMAND_STREAM_STOP;
-    camera_task_send(&message);
-
     camera_stream_read = 0;
     camera_stream_started = 0;
     uint32_t len = 9;
@@ -235,6 +237,14 @@ static void camera_stop_preview(void)
     arducamUartWrite(0xBB);
 }
 
+static void camera_retrieve_still(uint8_t *buffer)
+{
+    while (camera.receivedLength)
+    {
+        readBuff(&camera, test, 64);
+    }
+}
+
 static void camera_setup()
 {
     console_register_custom_process_trigger(0x55, 0xAA);
@@ -244,12 +254,15 @@ static void camera_setup()
     camera = createArducamCamera(1);
     begin(&camera);
     registerCallback(&camera, camera_read_buffer, 200, camera_stop_preview);
+    reset(&camera);
+    takePicture(&camera, 10, 2);
 }
 
 static void camera_task(void *parameter)
 {
     camera_message_t message;
 
+    camera_task_cli_register();
     camera_setup();
     while (1)
     {
@@ -267,6 +280,18 @@ static void camera_task(void *parameter)
 
             case CAMERA_COMMAND_STREAM_REFRESH:
                 captureThread(&camera);
+                break;
+
+            case CAMERA_COMMAND_STILL_CAPTURE:
+                camera_capture_length = 0;
+                takePicture(&camera,
+                    (CAM_IMAGE_MODE)message.payload.capture_parameters.resolution,
+                    (CAM_IMAGE_PIX_FMT)message.payload.capture_parameters.format);
+                break;
+
+            case CAMERA_COMMAND_STILL_RETRIEVE:
+                readBuff(&camera, test, 255);
+                //camera_retrieve_still(message.payload.buffer);
                 break;
 
             default:
@@ -301,3 +326,9 @@ void camera_task_send(camera_message_t *message)
         }
     }
 }
+
+uint32_t camera_get_capture_length(void)
+{
+    return camera_capture_length;
+}
+
