@@ -40,6 +40,7 @@ typedef enum camera_command_e {
     CAMERA_COMMAND_STREAM_REFRESH,
     CAMERA_COMMAND_STILL_CAPTURE,
     CAMERA_COMMAND_STILL_RETRIEVE,
+    CAMERA_COMMAND_STILL_RETRIEVE_DONE,
     CAMERA_COMMAND_NONE
 } camera_command_t;
 
@@ -63,6 +64,5 @@ typedef struct camera_message_s
 
 extern void camera_task_create(uint32_t priority);
 extern void camera_task_send(camera_message_t *message);
-extern uint32_t camera_get_capture_length(void);
 
 #endif

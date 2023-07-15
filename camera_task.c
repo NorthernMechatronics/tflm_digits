@@ -56,13 +56,21 @@ static uint8_t command_length;
 static uint8_t sendFlag = TRUE;
 static uint32_t camera_stream_read = 0;
 static uint8_t camera_stream_started = 0;
-static uint32_t camera_capture_length = 0;
 
 static TaskHandle_t camera_task_handle;
 static QueueHandle_t camera_queue_handle;
 static TimerHandle_t camera_timer_handle;
 
-static uint8_t test[255];
+#define IMAGE_PROCESS_BLOCK_SIZE (192)
+#define IMAGE_WIDTH  (32)
+#define IMAGE_HEIGHT (32)
+#define IMAGE_CHANNEL (3)
+#define IMAGE_SIZE  (IMAGE_WIDTH * IMAGE_HEIGHT * IMAGE_CHANNEL)
+
+static uint8_t image_process_buffer[IMAGE_PROCESS_BLOCK_SIZE];
+static uint8_t image_rgb888[IMAGE_SIZE];
+static uint8_t image_row_index, image_column_index;
+static uint32_t image_process_index = 0;
 
 uint8_t camera_process_command(ArducamCamera *cam, uint8_t *command)
 {
@@ -237,12 +245,62 @@ static void camera_stop_preview(void)
     arducamUartWrite(0xBB);
 }
 
-static void camera_retrieve_still(uint8_t *buffer)
+static void camera_retrieve_still(void)
 {
-    while (camera.receivedLength)
+    if (camera.receivedLength > 0)
     {
-        readBuff(&camera, test, 64);
+        // process only one block at a time to avoid blocking other tasks
+        uint32_t data_length = readBuff(&camera, image_process_buffer, IMAGE_PROCESS_BLOCK_SIZE);
+
+        uint32_t i = 0;
+        while (i < data_length)
+        {
+            if ((image_row_index % 3) == 0)
+            {
+                if ((i % 3) == 0)
+                {
+                    uint8_t r_raw = (image_process_buffer[i] & 0b11111000) >> 3;
+                    uint8_t b_raw = (image_process_buffer[i+1] & 0b00011111);
+                    uint8_t g_upper = (image_process_buffer[i] & 0b00000111) << 3;
+                    uint8_t g_lower = (image_process_buffer[i+1] & 0b11100000) >> 5;
+                    uint8_t g_raw = g_upper | g_lower;
+                    i += 6;
+                    image_rgb888[image_process_index++] = r_raw;
+                    image_rgb888[image_process_index++] = g_raw;
+                    image_rgb888[image_process_index++] = b_raw;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+        image_row_index++;
+
+        if (camera.receivedLength > 0)
+        {
+            camera_message_t message;
+            message.command = CAMERA_COMMAND_STILL_RETRIEVE;
+            camera_task_send(&message);
+        }
+        else
+        {
+            camera_message_t message;
+            message.command = CAMERA_COMMAND_STILL_RETRIEVE_DONE;
+            camera_task_send(&message);
+        }
     }
+}
+
+static void camera_print_capture(void)
+{
+    am_util_stdio_printf("\r\n\r\n");
+    am_util_stdio_printf("Captured Image:\r\n");
+    for (int i = 0; i < IMAGE_SIZE; i += 3)
+    {
+        am_util_stdio_printf("0x%02x 0x%02x 0x%02x\r\n", image_rgb888[i], image_rgb888[i+1], image_rgb888[i+2]);
+    }
+    am_util_stdio_printf("\r\n\r\n");
 }
 
 static void camera_setup()
@@ -283,15 +341,22 @@ static void camera_task(void *parameter)
                 break;
 
             case CAMERA_COMMAND_STILL_CAPTURE:
-                camera_capture_length = 0;
+                image_process_index = 0;
+                image_row_index = 0;
+                image_column_index = 0;
                 takePicture(&camera,
                     (CAM_IMAGE_MODE)message.payload.capture_parameters.resolution,
                     (CAM_IMAGE_PIX_FMT)message.payload.capture_parameters.format);
+                memset(image_rgb888, 0, IMAGE_SIZE);
                 break;
 
             case CAMERA_COMMAND_STILL_RETRIEVE:
-                readBuff(&camera, test, 255);
-                //camera_retrieve_still(message.payload.buffer);
+                camera_retrieve_still();
+                break;
+
+            case CAMERA_COMMAND_STILL_RETRIEVE_DONE:
+                // TODO: process subscriber to start image inferencing
+                camera_print_capture();
                 break;
 
             default:
@@ -326,9 +391,3 @@ void camera_task_send(camera_message_t *message)
         }
     }
 }
-
-uint32_t camera_get_capture_length(void)
-{
-    return camera_capture_length;
-}
-
