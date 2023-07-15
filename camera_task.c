@@ -370,7 +370,7 @@ static void camera_task(void *parameter)
 void camera_task_create(uint32_t priority)
 {
     camera_queue_handle = xQueueCreate(10, sizeof(camera_message_t));
-    camera_timer_handle = xTimerCreate("camera timer", 20, pdTRUE, NULL, camera_timer_callback);
+    camera_timer_handle = xTimerCreate("camera timer", 50, pdTRUE, NULL, camera_timer_callback);
     xTaskCreate(camera_task, "camera", 512, 0, priority, &camera_task_handle);
 }
 
