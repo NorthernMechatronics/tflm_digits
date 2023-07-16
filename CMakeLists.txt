@@ -68,6 +68,7 @@ target_sources(
     main.c
     application_task_cli.c
     application_task.c
+    button_task.c
     camera_task.c
     camera_task_cli.c
     console_task.c
