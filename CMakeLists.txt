@@ -23,11 +23,14 @@ target_link_libraries(
     PUBLIC
         -T${TARGET_LINK_SCRIPT}
         -Wl,--start-group
+        -L${CMSIS_LIB_DIR}
         -lstdc++
         -lsupc++
         -lm
         -lc
         -lgcc
+        -lCMSISDSP
+        -lcmsis-nn
         -Wl,--end-group
         -Wl,--gc-sections
 )
@@ -74,10 +77,6 @@ target_sources(
     drivers/arducam/ArducamLink.c
     drivers/arducam/ArducamUart.c
 
-#    constants.cc
-#    model.cc
-#    output_handler.cc
-#    tflm.cc
     constants.cc
     model.cc
     svhn_model.cc
