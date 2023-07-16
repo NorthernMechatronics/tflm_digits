@@ -120,13 +120,17 @@ void tflm_setup() {
 }
 
 
-void tflm_loop() {
-    memcpy(input->data.int8, Number_3_Light, input->bytes);
+void tflm_inference(uint8_t *in, size_t inlen, uint8_t *out, size_t *outlen)
+{
+    memcpy(input->data.int8, in, inlen);
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
         TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed\n");
     }
     output = interpreter->output(0);
+
+    out = tflite::GetTensorData<uint8_t>(output);
+    *outlen = output->dims->data[1];
 
     TF_LITE_REPORT_ERROR(error_reporter, "Size of output tensor: %d", output->dims->size);
     TF_LITE_REPORT_ERROR(error_reporter, "Shape: %d", output->dims->data[0]);

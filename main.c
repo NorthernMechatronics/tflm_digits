@@ -42,6 +42,7 @@
 #include <task.h>
 
 #include "application_task.h"
+#include "button_task.h"
 #include "camera_task.h"
 #include "console_task.h"
 
@@ -182,7 +183,8 @@ void system_setup(void)
 
 void system_start(void)
 {
-    console_task_create(2, CONSOLE_OUTPUT_UART);
+    button_task_create(4);
+    console_task_create(3, CONSOLE_OUTPUT_UART);
     camera_task_create(2);
     application_task_create(1);
 

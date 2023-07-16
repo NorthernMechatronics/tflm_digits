@@ -190,7 +190,6 @@ static void button_task(void *parameter)
             switch(command)
             {
             case BUTTON_STATE_PRESSED:
-                //led_send_command(LED_CMD_BUTTON_PRESS);
                 press_type = button_press_classification();
                 button_sequence_set_bit(&ui32ButtonSequence, button_state_counter, press_type);
                 button_state_counter++;
@@ -221,7 +220,6 @@ void button_task_create(uint32_t priority)
     am_hal_gpio_interrupt_clear(AM_HAL_GPIO_BIT(AM_BSP_GPIO_BUTTON0));
     am_hal_gpio_interrupt_enable(AM_HAL_GPIO_BIT(AM_BSP_GPIO_BUTTON0));
  
-
     xTaskCreate(button_task, "Button Task", 512, 0, priority, &button_task_handle);
     button_queue_handle = xQueueCreate(16, sizeof(button_command_e));
     button_timer_handle = xTimerCreate(
