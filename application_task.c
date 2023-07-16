@@ -35,7 +35,9 @@
 #include <am_util.h>
 
 #include <FreeRTOS.h>
+#include <queue.h>
 #include <task.h>
+#include <timers.h>
 
 #include <am_bsp.h>
 
@@ -43,6 +45,29 @@
 #include "application_task_cli.h"
 
 static TaskHandle_t application_task_handle;
+static TimerHandle_t application_timer_handle;
+static QueueHandle_t application_queue_handle;
+
+typedef enum application_command_e
+{
+    APPLICATION_COMMAND_CAPTURE_START,
+    APPLICATION_COMMAND_CAPTURE_DONE,
+    APPLICATION_COMMAND_HEARTBEAT
+} application_command_t;
+
+void application_task_send(application_command_t *message);
+
+static void application_timer_handler(TimerHandle_t timer)
+{
+    application_command_t command;
+    command = APPLICATION_COMMAND_HEARTBEAT;
+    application_task_send(&command);
+}
+
+static void application_button_handler()
+{
+
+}
 
 static void application_setup_task()
 {
@@ -60,21 +85,61 @@ static void application_setup_task()
 
     am_hal_gpio_pinconfig(AM_BSP_GPIO_LED4, g_AM_HAL_GPIO_OUTPUT);
     am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
+
+    am_hal_gpio_pinconfig(AM_BSP_GPIO_BUTTON0, g_AM_BSP_GPIO_BUTTON0);
+    am_hal_gpio_interrupt_register(AM_BSP_GPIO_BUTTON0, application_button_handler);
+
+    xTimerStart(application_timer_handle, portMAX_DELAY);
 }
 
 static void application_task(void *parameter)
 {
-    application_task_cli_register();
+    application_command_t message;
 
+    application_task_cli_register();
     application_setup_task();
     while (1)
     {
-        vTaskDelay(500);
-        am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
+        if (xQueueReceive(application_queue_handle, &message, portMAX_DELAY) == pdPASS)
+        {
+            switch(message)
+            {
+            case APPLICATION_COMMAND_CAPTURE_START:
+                break;
+
+            case APPLICATION_COMMAND_HEARTBEAT:
+                am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_TOGGLE);
+                break;
+
+            default:
+                break;
+            }
+        }
     }
 }
 
 void application_task_create(uint32_t priority)
 {
+    application_queue_handle = xQueueCreate(8, sizeof(application_command_t));
+    application_timer_handle = xTimerCreate("application", pdMS_TO_TICKS(500), pdTRUE, NULL, application_timer_handler);
     xTaskCreate(application_task, "application", 512, 0, priority, &application_task_handle);
+}
+
+void application_task_send(application_command_t *message)
+{
+    if (application_queue_handle)
+    {
+        BaseType_t xHigherPriorityTaskWoken;
+
+        if (xPortIsInsideInterrupt() == pdTRUE)
+        {
+            xHigherPriorityTaskWoken = pdFALSE;
+            xQueueSendFromISR(application_queue_handle, message, &xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+        else
+        {
+            xQueueSend(application_queue_handle, message, portMAX_DELAY);
+        }
+    }
 }
