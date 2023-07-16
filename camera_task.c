@@ -72,6 +72,14 @@ static uint8_t image_rgb888[IMAGE_SIZE];
 static uint8_t image_row_index, image_column_index;
 static uint32_t image_process_index = 0;
 
+typedef struct camera_event_callback_s
+{
+    camera_command_t event;
+    camera_event_handler_t handler;
+} camera_event_callback_t;
+
+static camera_event_callback_t camera_event_callback[CAMERA_COMMAND_MAXLEN];
+
 uint8_t camera_process_command(ArducamCamera *cam, uint8_t *command)
 {
     camera_message_t message;
@@ -356,8 +364,15 @@ static void camera_task(void *parameter)
                 break;
 
             case CAMERA_COMMAND_STILL_RETRIEVE_DONE:
-                // TODO: process subscriber to start image inferencing
-                camera_print_capture();
+                if (camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler)
+                {
+                    camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler(image_rgb888, IMAGE_SIZE);
+                }
+                else
+                {
+                    am_util_stdio_printf("No callback attached, displaying raw capture:\r\n");
+                    camera_print_capture();
+                }
                 break;
 
             default:
@@ -369,6 +384,7 @@ static void camera_task(void *parameter)
 
 void camera_task_create(uint32_t priority)
 {
+    memset(camera_event_callback, 0, sizeof(camera_event_callback));
     camera_queue_handle = xQueueCreate(10, sizeof(camera_message_t));
     camera_timer_handle = xTimerCreate("camera timer", 50, pdTRUE, NULL, camera_timer_callback);
     xTaskCreate(camera_task, "camera", 512, 0, priority, &camera_task_handle);
@@ -389,6 +405,18 @@ void camera_task_send(camera_message_t *message)
         else
         {
             xQueueSend(camera_queue_handle, message, portMAX_DELAY);
+        }
+    }
+}
+
+void camera_event_subscribe(camera_command_t event, camera_event_handler_t handler)
+{
+    for (size_t i = 0; i < CAMERA_COMMAND_MAXLEN; i++)
+    {
+        if (event == i)
+        {
+            camera_event_callback[i].handler = handler;
+            return;
         }
     }
 }
