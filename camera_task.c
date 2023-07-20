@@ -57,6 +57,8 @@ static uint8_t sendFlag = TRUE;
 static uint32_t camera_stream_read = 0;
 static uint8_t camera_stream_started = 0;
 
+static uint8_t r_max, g_max, b_max;
+
 static TaskHandle_t camera_task_handle;
 static QueueHandle_t camera_queue_handle;
 static TimerHandle_t camera_timer_handle;
@@ -281,9 +283,23 @@ static void camera_retrieve_still(void)
                     image_rgb888[image_process_index++] = g_raw;
                     image_rgb888[image_process_index++] = b_raw;
 
-                    float grayscale = 0.299 * r_raw + 0.587 * g_raw + 0.114 * b_raw;
+                    if (r_raw > r_max)
+                    {
+                        r_max = r_raw;
+                    }
 
-                    image_grayscale[grayscale_image_process_index++] = g_raw;
+                    if (g_raw > g_max)
+                    {
+                        g_max = g_raw;
+                    }
+
+                    if (b_raw > b_max)
+                    {
+                        b_max = b_raw;
+                    }
+
+                    // float grayscale = 0.299 * r_raw + 0.587 * g_raw + 0.114 * b_raw;
+                    // image_grayscale[grayscale_image_process_index++] = g_raw;
                 }
             }
             else
@@ -317,6 +333,22 @@ static void camera_print_capture(void)
         am_util_stdio_printf("0x%02x 0x%02x 0x%02x\r\n", image_rgb888[i], image_rgb888[i+1], image_rgb888[i+2]);
     }
     am_util_stdio_printf("\r\n\r\n");
+}
+
+static void camera_normalize()
+{
+    uint32_t r, g, b;
+    for (int i = 0; i < IMAGE_SIZE; i+=3)
+    {
+        r = image_rgb888[i] * 127 / r_max;
+        image_rgb888[i] = r;
+
+        g = image_rgb888[i+1] * 127 / g_max;
+        image_rgb888[i+1] = g;
+
+        b = image_rgb888[i+2] * 127 / b_max;
+        image_rgb888[i+2] = b;
+    }
 }
 
 static void camera_setup()
@@ -375,6 +407,7 @@ static void camera_task(void *parameter)
                 else
                 {
                     image_capture_state = 0;
+                    r_max = b_max = g_max = 0;
                     camera_retrieve_still();
                 }
                 break;
@@ -385,6 +418,8 @@ static void camera_task(void *parameter)
 
             case CAMERA_COMMAND_STILL_RETRIEVE_DONE:
                 image_capture_state = 0;
+                camera_normalize();
+//                camera_print_capture();
                 if (camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler)
                 {
                     camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler(image_rgb888, IMAGE_SIZE);
