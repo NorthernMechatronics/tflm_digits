@@ -66,11 +66,15 @@ static TimerHandle_t camera_timer_handle;
 #define IMAGE_HEIGHT (32)
 #define IMAGE_CHANNEL (3)
 #define IMAGE_SIZE  (IMAGE_WIDTH * IMAGE_HEIGHT * IMAGE_CHANNEL)
+#define IMAGE_SIZE_GRAYSCALE  (IMAGE_WIDTH * IMAGE_HEIGHT)
 
 static uint8_t image_process_buffer[IMAGE_PROCESS_BLOCK_SIZE];
 static uint8_t image_rgb888[IMAGE_SIZE];
+static uint8_t image_grayscale[IMAGE_SIZE_GRAYSCALE];
 static uint8_t image_row_index, image_column_index;
 static uint32_t image_process_index = 0;
+static uint32_t grayscale_image_process_index = 0;
+static uint32_t image_capture_state = 0;
 
 typedef struct camera_event_callback_s
 {
@@ -276,6 +280,10 @@ static void camera_retrieve_still(void)
                     image_rgb888[image_process_index++] = r_raw;
                     image_rgb888[image_process_index++] = g_raw;
                     image_rgb888[image_process_index++] = b_raw;
+
+                    float grayscale = 0.299 * r_raw + 0.587 * g_raw + 0.114 * b_raw;
+
+                    image_grayscale[grayscale_image_process_index++] = g_raw;
                 }
             }
             else
@@ -322,6 +330,7 @@ static void camera_setup()
     registerCallback(&camera, camera_read_buffer, 200, camera_stop_preview);
     reset(&camera);
     takePicture(&camera, 10, 2);
+    image_capture_state = 0;
 }
 
 static void camera_task(void *parameter)
@@ -350,13 +359,24 @@ static void camera_task(void *parameter)
 
             case CAMERA_COMMAND_STILL_CAPTURE:
                 image_process_index = 0;
+                grayscale_image_process_index = 0;
                 image_row_index = 0;
                 image_column_index = 0;
                 takePicture(&camera,
                     (CAM_IMAGE_MODE)message.payload.capture_parameters.resolution,
                     (CAM_IMAGE_PIX_FMT)message.payload.capture_parameters.format);
                 memset(image_rgb888, 0, IMAGE_SIZE);
-                camera_retrieve_still();
+                if (image_capture_state < 2)
+                {
+                    image_capture_state++;
+                    message.command = CAMERA_COMMAND_STILL_CAPTURE;
+                    camera_task_send(&message);
+                }
+                else
+                {
+                    image_capture_state = 0;
+                    camera_retrieve_still();
+                }
                 break;
 
             case CAMERA_COMMAND_STILL_RETRIEVE:
@@ -364,6 +384,7 @@ static void camera_task(void *parameter)
                 break;
 
             case CAMERA_COMMAND_STILL_RETRIEVE_DONE:
+                image_capture_state = 0;
                 if (camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler)
                 {
                     camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler(image_rgb888, IMAGE_SIZE);
