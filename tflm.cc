@@ -43,19 +43,6 @@
 #include "model_settings.h"
 #include <cstdint>
 
-#include "test_images/Number_0_Light.h"
-#include "test_images/Number_1_Light.h"
-#include "test_images/Number_2_Light.h"
-#include "test_images/Number_3_Light.h"
-#include "test_images/Number_4_Light.h"
-#include "test_images/Number_5_Light.h"
-#include "test_images/Number_6_Light.h"
-#include "test_images/Number_7_Light.h"
-#include "test_images/Number_8_Light.h"
-#include "test_images/Number_9_Light.h"
-
-
-
 #include "tflm.h"
 
 namespace
@@ -67,7 +54,7 @@ TfLiteTensor *input = nullptr;
 TfLiteTensor *output = nullptr;
 int inference_count = 0;
 
-constexpr int kTensorArenaSize = 136 * 1024;
+constexpr int kTensorArenaSize = 210 * 1024;
 alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 } // namespace
 
@@ -119,10 +106,28 @@ void tflm_setup() {
     TF_LITE_REPORT_ERROR(error_reporter, "Completed setup");
 }
 
+void prediction_results(uint8_t *out, size_t *outlen) {
+    int max_score = 0;
+    int max_index = 0;
+    for (int i = 0; i < kCategoryCount; ++i) {
+        if (max_score < out[i] + 128) {
+            max_index = i;
+            max_score = out[i] + 128;
+        }
+    }
+
+    TF_LITE_REPORT_ERROR(error_reporter, "Predicted digit: %c\nScore: %d", kCategoryLabels[max_index], max_score);
+    TF_LITE_REPORT_ERROR(error_reporter, "Raw categories: [1 2 3 4 5 6 7 8 9 0]");
+    TF_LITE_REPORT_ERROR(error_reporter, "Raw scores: [%d %d %d %d %d %d %d %d %d %d]", 
+        out[0] + 128, out[1] + 128, out[2] + 128, out[3] + 128, 
+        out[4] + 128, out[5] + 128, out[6] + 128, out[7] + 128, 
+        out[8] + 128, out[9] + 128);
+}
 
 void tflm_inference(uint8_t *in, size_t inlen, uint8_t *out, size_t *outlen)
 {
     memcpy(input->data.int8, in, inlen);
+
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
         TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed\n");
@@ -132,20 +137,8 @@ void tflm_inference(uint8_t *in, size_t inlen, uint8_t *out, size_t *outlen)
     out = tflite::GetTensorData<uint8_t>(output);
     *outlen = output->dims->data[1];
 
-    TF_LITE_REPORT_ERROR(error_reporter, "Size of output tensor: %d", output->dims->size);
-    TF_LITE_REPORT_ERROR(error_reporter, "Shape: %d", output->dims->data[0]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Number of categories: %d", output->dims->data[1]);
     TF_LITE_REPORT_ERROR(error_reporter, "Completed inference");
 
+    prediction_results(out, outlen);
 
-    TF_LITE_REPORT_ERROR(error_reporter, "Zero score: %d", output->data.int8[kZeroIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "One score: %d", output->data.int8[kOneIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Two score: %d", output->data.int8[kTwoIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Three score: %d", output->data.int8[kThreeIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Four score: %d", output->data.int8[kFourIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Five score: %d", output->data.int8[kFiveIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Six score: %d", output->data.int8[kSixIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Seven score: %d", output->data.int8[kSevenIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Eight score: %d", output->data.int8[kEightIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Nine score: %d", output->data.int8[kNineIndex]);
 }

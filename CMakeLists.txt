@@ -79,6 +79,7 @@ target_sources(
     drivers/arducam/ArducamUart.c
 
     constants.cc
+    model_settings.cc
     model.cc
     svhn_model.cc
     output_handler.cc

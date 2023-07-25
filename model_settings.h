@@ -33,6 +33,6 @@ constexpr int kSevenIndex = 6;
 constexpr int kEightIndex = 7;
 constexpr int kNineIndex = 8;
 constexpr int kZeroIndex = 9;
-extern const char* kCategoryLabels[kCategoryCount];
+extern const char kCategoryLabels[kCategoryCount];
 
 #endif // TENSORFLOW_LITE_MODEL_SETTINGS_H_
