@@ -47,6 +47,8 @@
 
 namespace
 {
+// Declare all of the necessary variables: error_reporter, model, interpreter,
+// input and output tensors.
 tflite::ErrorReporter *error_reporter = nullptr;
 const tflite::Model *model = nullptr;
 tflite::MicroInterpreter *interpreter = nullptr;
@@ -54,14 +56,19 @@ TfLiteTensor *input = nullptr;
 TfLiteTensor *output = nullptr;
 int inference_count = 0;
 
-constexpr int kTensorArenaSize = 210 * 1024;
+// Set the size of the tensor arena - the tensor arena will vary depending on
+// the model, but the arena size should be slightly above the minimum required
+// to reduce the amount of memory allocated.
+// There will be an error if the tensor arena size is too small.
+constexpr int kTensorArenaSize = 100 * 1024;
 alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 } // namespace
 
 void tflm_setup() {
     tflite::InitializeTarget();
-    static tflite::MicroErrorReporter micro_error_reporter;
 
+    // Declare the error_reporter.
+    static tflite::MicroErrorReporter micro_error_reporter;
     error_reporter = &micro_error_reporter;
     model = tflite::GetModel(tf_quant_model_july_13_2_tflite);
     if (model->version() != TFLITE_SCHEMA_VERSION)
@@ -71,8 +78,13 @@ void tflm_setup() {
                              "to supported version %d.",
                              model->version(),
                              TFLITE_SCHEMA_VERSION);
+        return;
     }
 
+    // Resolvers load in operations into the interpreter
+    // that are used within the model. Typically, you declare the layers
+    // you use in the model directly. However, if you don't already know
+    // the layers, you can use AllOpsResolver (with some codespace penalty).
     static tflite::AllOpsResolver resolver;
 
     // Build an interpreter to run the model with.
@@ -84,7 +96,7 @@ void tflm_setup() {
     TfLiteStatus allocate_status = interpreter->AllocateTensors();
     if (allocate_status != kTfLiteOk)
     {
-        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
+        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed. Size of kTensorArenaSize is too small.");
         return;
     }
 
@@ -92,53 +104,79 @@ void tflm_setup() {
     input = interpreter->input(0);
     output = interpreter->output(0);
 
-    TF_LITE_REPORT_ERROR(error_reporter, "The input type was %s", TfLiteTypeGetName(input->type));
-    TF_LITE_REPORT_ERROR(error_reporter, "Size: %d", input->dims->size);
-    TF_LITE_REPORT_ERROR(error_reporter, "Type of tensor: %s", TfLiteTypeGetName(input->type));
-    TF_LITE_REPORT_ERROR(error_reporter, "First shape: %d", input->dims->data[0]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Number of rows: %d", input->dims->data[1]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Number of columns: %d", input->dims->data[2]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Number of channels: %d", input->dims->data[3]);
+    // Check the settings match the model you have
+    if (kNumRows != input->dims->data[1]) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of rows expected: %d\nNumber of input rows given: %d", kNumRows, input->dims->data[1]);
+        return;
+    }
 
-    // Keep track of how many inferences we have performed.
+    if (kNumCols != input->dims->data[2]) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of columns expected: %d\nNumber of input columns given: %d", kNumCols, input->dims->data[2]);
+        return;
+    }
+
+    // Verify if it's either grayscale OR RGB
+    if (kNumChannels != input->dims->data[3]) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of channels expected: %d\nNumber of input columns given :%d", kNumChannels, input->dims->data[3]);
+        return;
+    }
+
+    // Reset the inferences count every time you start the project.
     inference_count = 0;
 
     TF_LITE_REPORT_ERROR(error_reporter, "Completed setup");
 }
 
-void prediction_results(uint8_t *out, size_t *outlen) {
-    int max_score = 0;
-    int max_index = 0;
-    for (int i = 0; i < kCategoryCount; ++i) {
-        if (max_score < out[i] + 128) {
+// Produce prediction results based on the inferences from the model.
+void prediction_results(int8_t *out, size_t *outlen) 
+{
+    const int RESIZE_CONSTANT = 128;
+    int max_score = 0, max_index = 0;
+    for (int i = 0; i < *outlen; ++i) 
+    {
+        int curr_score = out[i] + RESIZE_CONSTANT;
+        if (max_score <= curr_score) 
+        {
             max_index = i;
-            max_score = out[i] + 128;
+            max_score = curr_score;
         }
     }
 
+    // Show predicted digits and raw categories. The output tensor format is dependent on
+    // how the tensors
     TF_LITE_REPORT_ERROR(error_reporter, "Predicted digit: %c\nScore: %d", kCategoryLabels[max_index], max_score);
     TF_LITE_REPORT_ERROR(error_reporter, "Raw categories: [1 2 3 4 5 6 7 8 9 0]");
     TF_LITE_REPORT_ERROR(error_reporter, "Raw scores: [%d %d %d %d %d %d %d %d %d %d]", 
-        out[0] + 128, out[1] + 128, out[2] + 128, out[3] + 128, 
-        out[4] + 128, out[5] + 128, out[6] + 128, out[7] + 128, 
-        out[8] + 128, out[9] + 128);
+        out[0] + RESIZE_CONSTANT, out[1] + RESIZE_CONSTANT, out[2] + RESIZE_CONSTANT, out[3] + RESIZE_CONSTANT, 
+        out[4] + RESIZE_CONSTANT, out[5] + RESIZE_CONSTANT, out[6] + RESIZE_CONSTANT, out[7] + RESIZE_CONSTANT, 
+        out[8] + RESIZE_CONSTANT, out[9] + RESIZE_CONSTANT);
 }
 
-void tflm_inference(uint8_t *in, size_t inlen, uint8_t *out, size_t *outlen)
+void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
 {
+    const int NUMBER_OF_BYTES = kNumRows * kNumCols * kNumChannels;
+    if (NUMBER_OF_BYTES != inlen) {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of bytes coming from the camera: %d\nNumber of bytes expected: %d", inlen, NUMBER_OF_BYTES);
+        return;
+    }
+
+    // Copy the input from the camera into the input buffer of the model.
     memcpy(input->data.int8, in, inlen);
 
+    // Invoke the interpreter.
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
         TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed\n");
+        return;
     }
-    output = interpreter->output(0);
 
-    out = tflite::GetTensorData<uint8_t>(output);
+    // Grab the output tensor and type cast it to int8_t.
+    out = tflite::GetTensorData<int8_t>(output);
     *outlen = output->dims->data[1];
 
-    TF_LITE_REPORT_ERROR(error_reporter, "Completed inference");
+    TF_LITE_REPORT_ERROR(error_reporter, "Completed inference %d\n", inference_count);
 
     prediction_results(out, outlen);
 
+    inference_count++;
 }
