@@ -37,7 +37,7 @@
 
 #include "constants.h"
 #include "model.h"
-#include "svhn_model.h"
+#include "quant_model_small.h"
 #include "output_handler.h"
 
 #include "model_settings.h"
@@ -70,7 +70,7 @@ void tflm_setup() {
     // Declare the error_reporter.
     static tflite::MicroErrorReporter micro_error_reporter;
     error_reporter = &micro_error_reporter;
-    model = tflite::GetModel(tf_quant_model_july_13_2_tflite);
+    model = tflite::GetModel(quant_model_small);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         TF_LITE_REPORT_ERROR(error_reporter,

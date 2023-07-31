@@ -81,7 +81,7 @@ target_sources(
     constants.cc
     model_settings.cc
     model.cc
-    svhn_model.cc
+    quant_model_small.cc
     output_handler.cc
     tflm.cc
 
