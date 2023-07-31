@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef TENSORFLOW_LITE_MODEL_SETTINGS_H_
 #define TENSORFLOW_LITE_MODEL_SETTINGS_H_
 
+// These are settings tied to the model itself. Before running the model, ensure that the
+// input and output tensors of the model, as well as the category indexes are correct.
 constexpr int kNumCols = 32;
 constexpr int kNumRows = 32;
 constexpr int kNumChannels = 3;
