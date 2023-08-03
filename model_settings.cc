@@ -16,7 +16,7 @@ limitations under the License.
 #include "model_settings.h"
 
 // These are the category labels mentioned within the dataset. You may customize
-// them based on the model trained.
+// them based on the trained model.
 const char kCategoryLabels[kCategoryCount] = {
   '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
 };
