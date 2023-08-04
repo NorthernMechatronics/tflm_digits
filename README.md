@@ -1,6 +1,6 @@
 # Tensorflow Lite for Microcontrollers documentation
 
-This exmaple shows how to run Tensorflow Lite for Microcontrollers (TFLM) to take a picture from a camera, and run inferences on neural networks with varying sizes. The goal is to detect a single digit from a particular image.
+This exmaple shows how to run Tensorflow Lite for Microcontrollers (TFLM) to take a picture from a camera, and run inferences on neural networks with varying sizes. The goal is to detect a single digit from a given image.
 
 ## Table of Contents
 
@@ -144,7 +144,7 @@ resolver.AddMul();
 resolver.AddQuantize();
 ```
 
-If you choose to use an operation either not currently within AllOpsResolver -- that is, it exists in Tensorflow Core but not in Tensorflow Lite, you must first verify whether (Tensorflow Lite already supports it)[https://www.tensorflow.org/mlir/tfl_ops]. If it exists, you need to quantize the model with that given operation after training, and explicitly declare it using tflite::MicroMutableOpResolver AddCustom(). If you need to create a custom operator, you will need to follow the steps in (building and testing your own)[https://www.tensorflow.org/lite/guide/ops_compatibility] before importing it into the model. (Tensorflow Lite does not recommend building your own operations)[https://www.tensorflow.org/lite/guide/ops_compatibility] unless needed for performance and size reasons.
+If you choose to use an operation either not currently within AllOpsResolver -- that is, it exists in Tensorflow Core but not in Tensorflow Lite, you must first verify whether [Tensorflow Lite already supports it](https://www.tensorflow.org/mlir/tfl_ops). If it exists, you need to quantize the model with that given operation after training, and explicitly declare it using tflite::MicroMutableOpResolver AddCustom(). If you need to create a custom operator, you will need to follow the steps in [building and testing your own](https://www.tensorflow.org/lite/guide/ops_compatibility) before importing it into the model. [Tensorflow Lite does not recommend building your own operations](https://www.tensorflow.org/lite/guide/ops_compatibility) unless needed for performance and size reasons.
 
 If you add `#include "tensorflow/lite/micro/all_ops_resolver.h"`, you will declare the all_ops_resolver before declaring the interpreter:
 `static tflite::AllOpsResolver resolver;`.
