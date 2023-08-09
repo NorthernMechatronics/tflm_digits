@@ -9,8 +9,10 @@ This exmaple shows how to run Tensorflow Lite for Microcontrollers (TFLM) to tak
 - [Running inferences on the model](#running-inferences-on-the-model)
   - [Discussions on importing operations for a resolver](#discussions-on-importing-operations-for-a-resolver)
   - [How to use Netron](#how-to-use-netron)
-- [Possible errors](#possible-errors)
-  - [AllocateTensors failed.](#allocatetensors-failed)
+- [Running the build](#running-the-build)
+- [Possible errors directly related to TFLM](#possible-errors)
+  - [Poor alignment](#poor-alignment)
+  - [AllocateTensors() failed](#allocatetensors-failed)
   - [Declaring arrays in the inference function](#declaring-arrays-in-the-inference-function)
   - [Improper input and output tensor types](#improper-input-and-output-tensor-types)
   - [Improper input and output tensor shapes](#improper-input-and-output-tensor-shapes)
@@ -53,19 +55,56 @@ TFLM requires the following libraries:
 
 TFLM offers two ways to import the resolver: importing specific operations required for the model, and importing all operations. For the former, import the library through `#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"`, and for the latter, `#include "tensorflow/lite/micro/all_ops_resolver.h"`. More discussion found [here](#discussions-on-importing-operations-for-a-resolver) on which solution to choose.
 
+For the purposes below, steps 1-8 will be done within the **tflm_setup()** function, whereas steps 9-11 will be done within the **tflm_inference()** function. This is because once the model has been loaded in the interpreter, the interpreter remains static between inferences until debugging ceases.
+
 1. Import the model.
-   Include the header file after importing the libraries stated above. In addition, you must include the source file in the list of target sources under `CMakeLists.txt`. Assuming the path is the main folder, you can simply write the source file as `name_of_model.cc`.
+   Include the header file after importing the libraries stated above. In addition, you must include the source file in the list of target sources under `CMakeLists.txt`. Assuming the path is the main folder, you can simply write the source file as `name_of_model.cc`. For example:
+
+   ```
+   ...
+   target_sources(
+    ${APPLICATION}
+    PRIVATE
+    ${TARGET_SRC}
+    main.c
+    application_task_cli.c
+    application_task.c
+    button_task.c
+    camera_task.c
+    camera_task_cli.c
+    console_task.c
+
+    drivers/arducam/ArducamAmbiqHAL.c
+    drivers/arducam/ArducamCamera.c
+    drivers/arducam/ArducamLink.c
+    drivers/arducam/ArducamUart.c
+
+    constants.cc
+    model_settings.cc
+    /* Add your model source file here */
+    output_handler.cc
+    tflm.cc
+
+    utils/RTT/RTT/SEGGER_RTT.c
+    utils/RTT/RTT/SEGGER_RTT_printf.c
+   )
+   ...
+   ```
 
 2. Set up logging.
    Similar to printf in C, we set up logging. Declare the error reporter in the `tflm_setup` function.
+
    ```
     static tflite::MicroErrorReporter micro_error_reporter;
     error_reporter = &micro_error_reporter;
    ```
-3. Load the model into the microcontroller.
+
+3. Load the model into the microcontroller and initialize the target.
    The model is currently in a char array within the model imported in Step 1. Verify that the model's version is compatible with the schema.
 
    ```
+    tflite::InitializeTarget();
+
     model = tflite::GetModel(quant_model_medium);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
@@ -82,6 +121,11 @@ TFLM offers two ways to import the resolver: importing specific operations requi
 
 5. Allocate memory for the input, output and intermediate arrays using a uint8_t array.
    There is no set size required for the tensor arena size. TFLM will report errors if the tensor arena is too small. We recommend allocating the tensor arena based on the kilobyte (1024 bytes).
+
+   ```
+   constexpr int kTensorArenaSize = 300 * 1024;
+   alignas(16) uint8_t tensor_arena[kTensorArenaSize];
+   ```
 
 6. Instantiate the interpreter.
    Taking all the variables crated from Step 1-5, pass in the variables into the interpreter constructor.
@@ -123,13 +167,13 @@ TFLM offers two ways to import the resolver: importing specific operations requi
     the inferences. You should define these details in some way in `model_settings.cc` and `model_settings.h`, and provide a readable format when
     providing the predictions.
 
-Generally, steps 1-8 will be done within the **tflm_setup()** function, whereas steps 9-11 will be done within the **tflm_inference()** function. This is because once the model has been loaded in the interpreter, the interpreter remains static between inferences until debugging ceases.
+    We show an example in how we print out the predictions through the **prediction_results(int8_t \*out, size_t len)** function.
 
 ### Discussions on importing operations for a resolver
 
 Resolvers define operations that the interpreter needs to access in order to run the model. At the time of writing, there are **71 operations** allowed within TFLM.
-We do not recommend importing all operations due to high memory usage, and importing unused operations into the resolver is generally unacceptable.
-There are cases when this is acceptable: when the model's layers are not explicitly defined (e.g., using a model developed by someone else), or during development (i.e., experimentation purposes).
+**We do not recommend importing all operations** due to high memory usage, and importing unused operations into the resolver is unacceptable.
+There are certain cases where this is acceptable: when the model's layers are not explicitly defined (e.g., using a model developed by someone else), or during development (i.e., experimentation purposes).
 
 If you add `#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"`, you must understand which layers are required within your graph. You must either return back to the environment from which you built the model, or use a third-party service that explicitly outlines the layers for you, such as Netron. We have another discussion [here](#how-to-use-netron).
 
@@ -154,7 +198,10 @@ If you choose to use an operation either not currently within AllOpsResolver –
 [Tensorflow Lite does not recommend building your own operations](https://www.tensorflow.org/lite/guide/ops_compatibility) unless needed for performance and size reasons.
 
 If you add `#include "tensorflow/lite/micro/all_ops_resolver.h"`, you will declare the all_ops_resolver before declaring the interpreter:
-`static tflite::AllOpsResolver resolver;`.
+
+```
+static tflite::AllOpsResolver resolver;
+```
 
 ### How to use Netron
 
@@ -162,24 +209,73 @@ If you add `#include "tensorflow/lite/micro/all_ops_resolver.h"`, you will decla
 
 ![Picture of Netron's app](/images/netron_details.png)
 
-When you review the layers, you must include all types of operations the model uses. At the time of writing, this includes the following:
+When you review the layers, you must identify all types of operations the model uses. At the time of writing, this includes the following:
 
-- Normal operations such as multiplication and addition
-- Pooling layers
-- Convolutional layers
-- Activation functions
-- Reshaping functions
+- Basic operations (usually shown in black)
+- Pooling layers (usually shown in green)
+- Convolutional layers (usually shown in blue)
+- Activation functions (usually shown in red)
+- Reshaping functions (usually shown in beige/peach color)
 
-## Possible errors
+The input and output layers (i.e., the first and last layer in the model) don't need to be included. Once you identify all the operations,
+check within the [`micro_mutable_op_resolver.h`](https://github.com/tensorflow/tflite-micro/blob/main/tensorflow/lite/micro/micro_mutable_op_resolver.h) file to see their respective operators. Each operation will have an `Add` prefix to them. Then, add them as described [here](#discussions-on-importing-operations-for-a-resolver).
+
+If you fail to add all of the layers, TFLM will give an error and you will not be able to run inferences.
+
+## Running the build
+
+We assume you have already set up the microcontroller properly with the camera mounted, and plugged in to your computer.
+
+To build the executable files, follow the steps in [nmapp2](https://github.com/NorthernMechatronics/nmapp2/blob/master/doc/getting_started.md#build-the-application) to create the build.
+
+Once completed, follow instructions within [nmapp2](https://github.com/NorthernMechatronics/nmapp2/blob/master/doc/getting_started.md#build-the-application) to run debugging on the microcontroller. On Visual Studio Code, this is easy to do: go to Run -> Start Debugging.
+
+Once the debugging process has started, you need to communicate through serial. On MacOS, you can use the terminal:
+
+1. Open up a Terminal window.
+2. Find all of the available serial ports by running this command: `ls /dev/tty.*`. Assuming that the microcontroller is on and plugged in, you will likely see a unique name (on our end, it's called `/dev/tty.usbmodem0009000021581`).
+3. Run the command: `screen /dev/tty.<insert_name_of_usb_modem> 115200`. [`screen`](https://linuxize.com/post/how-to-use-linux-screen/) is a command within Linux that allows you to open multiple terminals within one session. For our sake, we care only about monitoring the serial port regardless if the program is debugged or not. `/dev/tty.<insert_name_of_usb_modem>` is the name of the microcontroller's serial port; replace the `<insert_name_of_usb_modem` with the actual name of the microcontroller. Lastly, **115200** refers to the [baud rate](https://en.wikipedia.org/wiki/Baud); the speed at which communication can occur between the computer and the microcontroller. This is a fixed rate, and you will receive an error if the baud rate does not match.
+4. If you are already debugging, hit `Enter` a couple of times. You may see times printed out along with a `>` sign. If you have not started debugging, and you run debugging through VSCode, you will see Northern Mechatronics, NM180100 Command Console and then `Completed setup`. Both cases mean the program is working.
+5. To take pictures, center the images over the digit you want to recognize, and type in `cam capture` on the serial monitor or terminal. The inference should be quick (i.e., a couple of seconds), and you will be able to see the predictions.
+
+VSCode also has a [serial monitor extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-serial-monitor) that you can use. The setup is relatively straightforward but the settings are as follows:
+
+- Monitor Mode: Serial
+- Port: /dev/tty.<insert_name_of_usb_modem>
+- Baud Rate: 115200
+- Toggle Terminal Mode is turned On
+
+You can follow Steps 4 and 5 to verify that the setup works and run inferences.
+
+For Windows, we find that [PuTTY](https://www.putty.org/) is a useful tool for serial communication. Use the same settings as mentioned above.
+
+## Possible errors directly related to TFLM
 
 See `tflm.cc` for how error checking is done when running the model.
 
 TFLM does not require explicit error checking since most of them are reported during runtime, and there are accompanying debug statements. However, it is your responsibility to know the model's shapes and required operations, because they influence the predictions that come out of the model. You should be aware the requirements of running a model on a microcontroller are stricter than running one on a laptop or phone.
 
-### AllocateTensors() failed.
+### AllocateTensors() failed
 
-If the tensor arena size is not large enough to fit the input and output tensors, then TFLM will return an error. You may need to try different
-sizes through kTensorArenaSize in order to find the minimum needed to run the model, although TFLM may also report how many bytes you need in the error. In that case, you should follow TFLM's reporting.
+If the tensor arena size is not large enough to fit the input and output tensors, then TFLM will return an error. You need to try different
+sizes through kTensorArenaSize in order to find the minimum needed to run the model.
+
+### Poor alignment
+
+This may not necessarily be coming from TFLM but rather from the microcontroller. Ensure that you add **alignas(8)** at the beginning of the model's definition:
+
+```
+alignas(8) const unsigned char model_name = {
+   ...
+}
+```
+
+Also, in following TFLM's convention, add **alignas(16**)\*\* at the beginning of declaring the tensor arena:
+
+```
+constexpr int kTensorArenaSize = 100 * 1024;
+alignas(16) uint8_t tensor_arena[kTensorArenaSize];
+```
 
 ### Declaring arrays in the inference function
 
@@ -189,11 +285,11 @@ Declaring static arrays in the setup function is allowed, but there is no real u
 
 ### Improper input and output tensor types
 
-Deploying models on microcontrollers require more work because the technical capabilities on a microcontroller are more limiting than other devices, such as a phone or a computer. Consequently, you must ensure the model's input and output types are compatible with TFLM.
+Deploying models on microcontrollers require more work because the technical capabilities on a microcontroller are more limiting than other devices. Consequently, you must ensure the model's input and output types are compatible with TFLM.
 
 During the quantization process, you will specify in the converter the inference input and output type. Currently, Tensorflow Lite supports three types of quantization: dynamic range quantization, full integer quantization and float16 quantization. For TFLM, (full integer quantization is best suited for microcontrollers)[https://www.tensorflow.org/lite/performance/post_training_quantization#full_integer_quantization].
 
-**Hybrid models are not allowed** – that is, when the inference input type is different than the output type. As of the time of writing, we can run inferences when both the input and output types are either **tf.uint8** or **tf.int8**.
+**Hybrid models are not allowed** – that is, when the inference input type is different than the output type. As of the time of writing, we can **properly** run inferences when both the input and output types are either **tf.uint8** or **tf.int8**.
 
 Whichever type you choose, check that you are copying the image and returning the data to the right data type. For instance, if the data type of both the input and output tensors are **tf.int8**:
 
@@ -213,7 +309,7 @@ Error checking exists within `tflm.cc` to check the input and output shapes are 
 
 Input images typically have a 4D shape. In that shape, the first axis (i.e., `input->data[0]`) indicates how many images are being passed into the model. For inferences, this is always 1. The second and third axes (i.e., `input->data[1]` and `input->data[2]`) indicate the number of rows and columns respectively. The last axis (i.e., `input->data[3]`) indicates the number of channels or bytes within each pixel. For grayscale, the number is usually 1, and for RGB, the number is usually 3. You should verify this by checking the interpreter input and output details – see [model settings](#model-settings) for more details.
 
-Output tensors typically have a 2D shape. The first axis (i.e., `output->data[0]` ) reflects how many tensors are being outputted. This number is always 1 for inferences. The second axis (`output->data[1]`) indicates how many elements are in the output tensor. This is important to determine how many scores will be provided.
+Output tensors typically have a 2D shape. The first axis (i.e., `output->data[0]` ) reflects how many tensors are outputted. This number is always 1, because there is always one result for one image. The second axis (`output->data[1]`) indicates how many elements are in the output tensor. For the example models provided, there are 10 elements provided.
 
 ### Predictions are not printing out properly
 
