@@ -287,7 +287,7 @@ Declaring static arrays in the setup function is allowed, but there is no real u
 
 Deploying models on microcontrollers require more work because the technical capabilities on a microcontroller are more limiting than other devices. Consequently, you must ensure the model's input and output types are compatible with TFLM.
 
-During the quantization process, you will specify in the converter the inference input and output type. Currently, Tensorflow Lite supports three types of quantization: dynamic range quantization, full integer quantization and float16 quantization. For TFLM, (full integer quantization is best suited for microcontrollers)[https://www.tensorflow.org/lite/performance/post_training_quantization#full_integer_quantization].
+During the quantization process, you will specify in the converter the inference input and output type. Currently, Tensorflow Lite supports three types of quantization: dynamic range quantization, full integer quantization and float16 quantization. For TFLM, [full integer quantization is best suited for microcontrollers](https://www.tensorflow.org/lite/performance/post_training_quantization#full_integer_quantization).
 
 **Hybrid models are not allowed** – that is, when the inference input type is different than the output type. As of the time of writing, we can **properly** run inferences when both the input and output types are either **tf.uint8** or **tf.int8**.
 
