@@ -94,7 +94,7 @@ void tflm_setup() {
     TfLiteStatus allocate_status = interpreter->AllocateTensors();
     if (allocate_status != kTfLiteOk)
     {
-        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed. Size of kTensorArenaSize is likely too small.");
+        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed.");
         return;
     }
 
@@ -155,7 +155,7 @@ void prediction_results(int8_t *out, size_t *outlen)
         kCategoryLabels[kZeroIndex], kCategoryLabels[kOneIndex], kCategoryLabels[kTwoIndex], kCategoryLabels[kThreeIndex],
         kCategoryLabels[kFourIndex], kCategoryLabels[kFiveIndex], kCategoryLabels[kSixIndex], kCategoryLabels[kSevenIndex],
         kCategoryLabels[kEightIndex], kCategoryLabels[kNineIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Raw scores: [%d %d %d %d %d %d %d %d %d %d]", 
+    TF_LITE_REPORT_ERROR(error_reporter, "Raw scores: \t[%d %d %d %d %d %d %d %d %d %d]", 
         out[kZeroIndex] + RESIZE_CONSTANT, out[kOneIndex] + RESIZE_CONSTANT, out[kTwoIndex] + RESIZE_CONSTANT, out[kThreeIndex] + RESIZE_CONSTANT, 
         out[kFourIndex] + RESIZE_CONSTANT, out[kFiveIndex] + RESIZE_CONSTANT, out[kSixIndex] + RESIZE_CONSTANT, out[kSevenIndex] + RESIZE_CONSTANT, 
         out[kEightIndex] + RESIZE_CONSTANT, out[kNineIndex] + RESIZE_CONSTANT);

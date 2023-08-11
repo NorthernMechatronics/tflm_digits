@@ -1,15 +1,18 @@
 # Tensorflow Lite for Microcontrollers documentation
 
-This exmaple shows how to run Tensorflow Lite for Microcontrollers (TFLM) to take a picture from a camera, and run inferences on neural networks with varying sizes. The goal is to detect a single digit from a given image.
+This example shows how to run [Tensorflow Lite for Microcontrollers (TFLM)](https://www.tensorflow.org/lite/microcontrollers) to take a picture from a camera, and run inferences on neural networks with varying sizes. The goal is to detect a single digit from a given image.
 
 ## Table of Contents
 
+- [Training the model](#training-the-model)
 - [Converting the model](#converting-the-model)
 - [Model settings](#model-settings)
 - [Running inferences on the model](#running-inferences-on-the-model)
   - [Discussions on importing operations for a resolver](#discussions-on-importing-operations-for-a-resolver)
   - [How to use Netron](#how-to-use-netron)
 - [Running the build](#running-the-build)
+- [Possible errors related to running the build](#possible-errors-related-to-running-the-build)
+  - ["Sorry, could not find a PTY" or "Cannot open line... for R/W: Resource busy" from MacOS terminal](#sorry-could-not-find-a-pty-or-cannot-open-line-for-rw-resource-busy-from-macos-terminal)
 - [Possible errors directly related to TFLM](#possible-errors)
   - [Poor alignment](#poor-alignment)
   - [AllocateTensors() failed](#allocatetensors-failed)
@@ -17,6 +20,10 @@ This exmaple shows how to run Tensorflow Lite for Microcontrollers (TFLM) to tak
   - [Improper input and output tensor types](#improper-input-and-output-tensor-types)
   - [Improper input and output tensor shapes](#improper-input-and-output-tensor-shapes)
   - [Predictions are not printing out properly](#predictions-are-not-printing-out-properly)
+
+## Training the model
+
+See <!-- --> for more information.
 
 ## Converting the model
 
@@ -89,6 +96,13 @@ For the purposes below, steps 1-8 will be done within the **tflm_setup()** funct
     utils/RTT/RTT/SEGGER_RTT_printf.c
    )
    ...
+   ```
+
+   In tflm.cc:
+
+   ```
+   #include "model_settings.h"
+   #include "quant_model_medium.h"
    ```
 
 2. Set up logging.
@@ -175,12 +189,15 @@ Resolvers define operations that the interpreter needs to access in order to run
 **We do not recommend importing all operations** due to high memory usage, and importing unused operations into the resolver is unacceptable.
 There are certain cases where this is acceptable: when the model's layers are not explicitly defined (e.g., using a model developed by someone else), or during development (i.e., experimentation purposes).
 
-If you add `#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"`, you must understand which layers are required within your graph. You must either return back to the environment from which you built the model, or use a third-party service that explicitly outlines the layers for you, such as Netron. We have another discussion [here](#how-to-use-netron).
+If you choose to only add the operations you need, you must understand which layers are required within your graph. You must either return back to the environment from which you built the model, or use a third-party service that explicitly outlines the layers for you, such as Netron. We have another discussion [here](#how-to-use-netron).
 
 To instantiate the resolver, you must first declare the resolver using `tflite::MicroMutableOpResolver<number_of_ops>`
 class. Then, fill in the number of operations you will use under `number_of_ops`, and invoke the functions for each operaion you will use. For instance:
 
 ```
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
+...
+
 static tflite::MicroMutableOpResolver<9> resolver;
 resolver.AddConv2D();
 resolver.AddMaxPool2D();
@@ -195,17 +212,19 @@ resolver.AddQuantize();
 
 If you choose to use an operation either not currently within AllOpsResolver – that is, it exists in Tensorflow Core but not in Tensorflow Lite, you must first verify whether [Tensorflow Lite already supports it](https://www.tensorflow.org/mlir/tfl_ops). If it exists, you need to quantize the model with that given operation after training, and explicitly declare it using the function `tflite::MicroMutableOpResolver AddCustom()`. If you need to create a custom operator, you will need to follow the steps in [building and testing your own](https://www.tensorflow.org/lite/guide/ops_compatibility) before importing it into the model.
 
-[Tensorflow Lite does not recommend building your own operations](https://www.tensorflow.org/lite/guide/ops_compatibility) unless needed for performance and size reasons.
+In general, [Tensorflow Lite does not recommend building your own operations](https://www.tensorflow.org/lite/guide/ops_compatibility) unless needed for performance and size reasons.
 
-If you add `#include "tensorflow/lite/micro/all_ops_resolver.h"`, you will declare the all_ops_resolver before declaring the interpreter:
+On the other hand, if you move forward with importing all of the resolver operations, you will declare the all_ops_resolver before declaring the interpreter:
 
 ```
+#include "tensorflow/lite/micro/all_ops_resolver.h"
+...
 static tflite::AllOpsResolver resolver;
 ```
 
 ### How to use Netron
 
-[Netron](www.netron.app) is a open-source project that allows you to view the different layers and operations of a model. To use the service, upload your generated model (whether quantized or not).
+[Netron](www.netron.app) is a open-source project that allows you to view the different layers and operations of a model. To use the service, upload your generated .tflite model (whether quantized or not).
 
 ![Picture of Netron's app](/images/netron_details.png)
 
@@ -217,7 +236,7 @@ When you review the layers, you must identify all types of operations the model 
 - Activation functions (usually shown in red)
 - Reshaping functions (usually shown in beige/peach color)
 
-The input and output layers (i.e., the first and last layer in the model) don't need to be included. Once you identify all the operations,
+The input and output layers colored in light gray (i.e., the first and last layer in the model) don't need to be included. Once you identify all the operations,
 check within the [`micro_mutable_op_resolver.h`](https://github.com/tensorflow/tflite-micro/blob/main/tensorflow/lite/micro/micro_mutable_op_resolver.h) file to see their respective operators. Each operation will have an `Add` prefix to them. Then, add them as described [here](#discussions-on-importing-operations-for-a-resolver).
 
 If you fail to add all of the layers, TFLM will give an error and you will not be able to run inferences.
@@ -245,9 +264,17 @@ VSCode also has a [serial monitor extension](https://marketplace.visualstudio.co
 - Baud Rate: 115200
 - Toggle Terminal Mode is turned On
 
-You can follow Steps 4 and 5 to verify that the setup works and run inferences.
+You can then follow Steps 4 and 5 to verify that the setup works and run inferences.
 
 For Windows, we find that [PuTTY](https://www.putty.org/) is a useful tool for serial communication. Use the same settings as mentioned above.
+
+## Possible errors related to running the build
+
+These errors vary depending on the system you are running the inferences. However, there are errors we have encountered before that prove useful to know.
+
+### "Sorry, could not find a PTY" or "Cannot open line... for R/W: Resource busy" from MacOS terminal
+
+When you first open a screen terminal in MacOS, you should not close the terminal until you are done debugging your program with the microcontroller. Otherwise, you will not be able to reopen that same terminal with the `screen` command. To resolve this, simply turn off the microcontroller, and turn it back on again. Then, run the steps again in [running the build](#running-the-build).
 
 ## Possible errors directly related to TFLM
 
@@ -270,7 +297,7 @@ alignas(8) const unsigned char model_name = {
 }
 ```
 
-Also, in following TFLM's convention, add **alignas(16**)\*\* at the beginning of declaring the tensor arena:
+Also, in following TFLM's convention, add **alignas(16)** at the beginning of declaring the tensor arena:
 
 ```
 constexpr int kTensorArenaSize = 100 * 1024;
@@ -315,15 +342,15 @@ Output tensors typically have a 2D shape. The first axis (i.e., `output->data[0]
 
 This is uncommon, but if text is not printed out of the error_reporter correctly or doesn't print all the way, you need to ensure that:
 
-- syntax when invoking TF_LITE_REPORT_ERROR is correct
-- all variables passed into TF_LITE_REPORT_ERROR have the correct types within the string.
+- syntax when invoking `TF_LITE_REPORT_ERROR` is correct
+- all variables passed into `TF_LITE_REPORT_ERROR` have the correct types within the string.
 
-As a reminder, TF_LITE_REPORT_ERROR has at least two parameters: the error reporter `error_reporter` and the text printed out as a string.
+As a reminder, `TF_LITE_REPORT_ERROR` has at least two parameters: the error reporter `error_reporter` and the text printed out as a string.
 
 If any variables are referenced, then you must:
 
 - reference the data types within the string and where each variable will be used
-- pass the variables as extra parameters in TF_LITE_REPORT_ERROR.
+- pass the variables as extra parameters in `TF_LITE_REPORT_ERROR`.
 
 For instance:
 
