@@ -28,9 +28,13 @@ The stride length is the amount of squares the kernel moves once the element-wis
 
 Convolutional layers are known to identify certain features from the input image. For us, the nature of the element-wise product in the kernel suggests that colors of an image which are closer to extremes (i.e., purely black or white pixels, so 0 or 255) are likely to be recognized by earlier convolutional layers within the model. Pixels which have less extreme colors or are closer to the middle of the spectrum (i.e., somewhat gray or black pixels such as 120-180) will be pronounced in later convolutional layers within the model. Broadly, low-level features such as edges and colors captured in the first set of convolutional layers, whereas high-level features such as the overall space or background of the image is captured in later convolutional layers.
 
-Max pooling layers are designed to reduce the dimensions of the overall input image. It accomplishes this by taking the maximum value of a small grid (usually 2x2) within a part of the image. Evidently, the resulting matrix will be smaller in size with less detail about the original image. Max pooling behaves differently than convolutional layers because it does not shift in the same way as the stride. Once the maximum value has been evaluated, we shift the grid to the right by the width of the grid, not by the stride length.
+Max pooling layers are designed to reduce the dimensions of the overall input image. It accomplishes this by taking the maximum value of a small grid (usually 2x2) within a part of the image. Evidently, the resulting matrix will be smaller in size with less detail about the original image, but the overall design and shape of the image is maintained. Max pooling behaves differently than convolutional layers because it does not shift in the same way as the stride. Once the maximum value has been evaluated in one grid, we shift the grid to the right by the width of the grid, not by the stride length.
 
-Fully connected/dense layers are one of the last layers of a convolutional neural network. After a series of convolutional and max pooling layers, the fully connected layers will flatten the previous outputs coming from the convolutional layers and transforms them into a single vector through a weights matrix within the layer. These transformations imply that the input vector for a dense layer will have an influence for every output of the output vector.
+Fully connected/dense layers are one of the last layers of a convolutional neural network. The purpose is to retrieve the relationships of features learned in previous layers, and to perform proper classification tasks. After a series of convolutional and max pooling layers, the fully connected layers will flatten the previous outputs coming from the convolutional layers and transforms them into a single vector through a weights matrix within the layer. The flattening process occurs because the feature maps resulting from a convolutional or max pooling layer are in a two-dimensional matrix, whereas a normal fully connected layer accepts a one dimensional vector. The weights matrix exists because in a fully connected layer, all of its neurons are connected to each neuron in the previous layer, and each neuron has a certain weight that represnts the strength of the connection between two neurons.
+
+Features and capturing complicated relationships are the foci of dense layers. High-level features, especially those captured in later convolutional layers, are collated together to help the network recognize patterns that allow it to classify the input image properly. Typically, the more neurons in a fully connected layer exist, the more able the network is in capturing important relationships, but there is a computational penalty because the high number of connections and weights increase the necessary resources. As well, the large number of parameters within a fully connected layer increases the probability that overfitting may occur. Overfitting occurs when a machine learning model is able to give accurate predictions on the training data, but any data or images outside of the training set cannot be recognized.
+
+Dropout layers are not needed, but they exist to prevent overfitting. They work by randomly removing synapses from neurons of previous layers so that they no longer have an impact on subsequent layers.
 
 ### Model architecture: how do you arrange them?
 
@@ -48,17 +52,24 @@ In some existing papers such as MobileNet, we have the following architecture:
 
 INPUT -> CONV -> CONV (DW) -> CONV -> CONV (DW) -> ... (repeat another 11 times) -> AVG POOL -> DENSE -> DENSE -> OUTPUT
 
-Note that CONV (DW) is a "depthwise convolution layer". In the first dense layer, all of the neurons from the previous pooling layer connect to all of the layers in the dense layer, and the second dense layer is the layer responsible for providing predictions, depending on the number of classes that exist.
+Note that CONV (DW) is a "depthwise convolution layer", and AVG POOL is an average pool layer (akin to a max pooling layer, but taking the average of all the numbers in a specified grid). In the first dense layer, all of the neurons from the previous pooling layer connect to all of the layers in the dense layer, and the second dense layer is the layer responsible for providing predictions, depending on the number of classes that exist.
 
 ### Model architecture: activation functions
 
-There are a couple of functions to add...
+A crucial part of activation functions is the idea of linearity and non-linearity.
+Linear functions are of the form, **y = W'x + b'**, where W' is some weights matrix multipled by the input vector, and b' is the bias. When you input some vector into the linear activation function, the result is simply another vector. The problem is that if you were to take the entire set of vectors existing in a n dimensional space, they would also map a linear function. However, part of our goals when developing a machine learning algorithm is to determine more complicated and intricate relationships of the input data. Using linear activation functions limits the model to learn relations between input and outputs which are linear, whereas data in the real world tends to be less straight-forward and therefore are non-linear.
+
+There are different types of functions that serve useful for introducing non-linearity; ReLU, Sigmoid, Tanh, Softmax. For our purposes, we used ReLU and Softmax as our activation functions.
 
 ### Choosing a good dataset
 
 ## Process of model construction
 
 ### Setting up your environment
+
+In the course of the project, we've found four ways to set up the envrionment: Jupyter Notebook, Colab, Kaggle, or simply running Python.
+
+Jupyter Notebook, Colab, Kaggle are recommended for two main reasons. First of all, these environments allow you to segment your code so that any errors that occur do not require you to run the entire script again. Furthermore, these environments already have most of the libraries that you need installed, so there is no need to run **pip install** for certain packages.
 
 ### Import the dataset
 
