@@ -4,6 +4,14 @@ The purpose of this project is to demonstrate how to train a machine learning mo
 
 ## Table of Contents
 
+- [What are convolutional neural networks (CNN)?](#what-are-convolutional-neural-networks-cnn)
+  - [Brief history behind CNNs](#brief-history-behind-cnns)
+- [What plays into a good model?](#what-plays-into-a-good-model)
+  - [Model architecture: what does each layer mean?](#model-architecture-what-does-each-layer-mean)
+  - [Model architecture: how do you arrange them?](#model-architecture-how-do-you-arrange-them)
+  - [Model architecture: activation functions](#model-architecture-activation-functions)
+  - [Choosing a good dataset](#choosing-a-good-dataset)
+- [Process of model construction](#process-of-model-construction)
 - [References](#references)
 
 ## What are convolutional neural networks (CNN)?
@@ -16,7 +24,7 @@ Convolutional neural networks first came into the limelight during the 1980s and
 
 Other convolutional neural networks entered the fray. AlexNet, in 2012, consisted of varying sizes of convolution layers, and ultimately rendered previous CNNs useless because its peformance was more superior. InceptionNet focused on deep sequential models with various sizes of kernels in its convolutional layers with the goal of better performance. VGG is noted as a good start for transfer learning, for its small convolutional kernels (3x3 compared to 5x5) makes it computationally easier without the added complexity. On top of that, MobileNet became an important model for edge devices as the architecture is less resource intensive.
 
-### What plays into a good model?
+## What plays into a good model?
 
 ### Model architecture: what does each layer mean?
 
@@ -40,7 +48,7 @@ Dropout layers are not needed, but they exist to prevent overfitting. They work 
 
 For this section, we use **CONV** to represent convolutional layers, **POOL** for max pooling layers, and **DENSE** for fully connected layers.
 
-In most cases, it's enough to have the following:
+In many cases, it's enough to have the following:
 
 INPUT -> CONV -> POOL -> DENSE -> DENSE -> OUTPUT
 
@@ -52,14 +60,14 @@ In some existing papers such as MobileNet, we have the following architecture:
 
 INPUT -> CONV -> CONV (DW) -> CONV -> CONV (DW) -> ... (repeat another 11 times) -> AVG POOL -> DENSE -> DENSE -> OUTPUT
 
-Note that CONV (DW) is a "depthwise convolution layer", and AVG POOL is an average pool layer (akin to a max pooling layer, but taking the average of all the numbers in a specified grid). In the first dense layer, all of the neurons from the previous pooling layer connect to all of the layers in the dense layer, and the second dense layer is the layer responsible for providing predictions, depending on the number of classes that exist.
+Note that CONV (DW) is a "depthwise convolution layer". Depthwise convolutions only convolve over one channel in an image, whereas normal convolutional layers convolve over all channels in an image. AVG POOL is an average pool layer (akin to a max pooling layer, but taking the average of all the numbers in a specified grid). In the first dense layer, all of the neurons from the previous pooling layer connect to all of the layers in the dense layer, and the second dense layer is the layer responsible for providing predictions, depending on the number of classes that exist.
 
 ### Model architecture: activation functions
 
 A crucial part of activation functions is the idea of linearity and non-linearity.
 Linear functions are of the form, **y = W'x + b'**, where W' is some weights matrix multipled by the input vector, and b' is the bias. When you input some vector into the linear activation function, the result is simply another vector. The problem is that if you were to take the entire set of vectors existing in a n dimensional space, they would also map a linear function. Non-linear functions on the other hand, are functions for which do not have a linear relationship between their variables. Think of functions that have curves or are piecewise.
 
-Part of our goals when developing a machine learning algorithm is to determine more complicated and intricate relationships of the input data. Using linear activation functions limits the model to learn relations between input and outputs which are linear, whereas data in the real world tends to be less straight-forward and therefore are non-linear.
+Part of our goals when developing a machine learning algorithm is to determine more complicated and intricate relationships of the input data. Using linear activation functions limits the model to learn relations between input and outputs which are linear, whereas data in the real world tends to be less straight-forward and are usually non-linear.
 
 There are different types of functions that are useful for introducing non-linearity: ReLU, Sigmoid, Tanh and Softmax. For our purposes, we used ReLU and Softmax as our activation functions. In many articles, we'll see ReLU is largely used within a hidden layer – that is, a layer that is neither the first nor the last layer in a model. Softmax functions are used for the last layer in a model, although some articles have debated the usage of other functions such as sigmoid.
 
@@ -67,7 +75,7 @@ Brief history lesson: in the past, tanh and sigmoid were considered great activa
 
 ReLU stands for rectified linear unit. ReLU is simply defined as the piecewise function **f(x) = max{0, x}** where x is just the input value. Although this function apperas linear, this function is considered non-linear because it does not represent a linear function – any negative inputs automatically output zero.
 
-Softmax is a function represented by the following function: \*\*f(z)\_i = (e^z_i)/(sum of e^z_j from 1 to K). In essence, this function transforms some number of real numbers (K real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification.
+Softmax is a function represented by the following function: **f(z)\_i = (e^z_i)/(sum of e^z_j from 1 to K)**. In essence, this function transforms some number of real numbers (K real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification.
 
 Sigmoid is another function similar to softmax, represented by the following function: **S(x) = 1/(1+ e^-x)**. Similar to softmax, the sigmoid function plotted on a graph is a non-linear function with the slope at its highest marked when x = 0. Sigmoid and softmax are both used in classification problems, but the sigmoid function is used for binary classification (i.e., when there are two classes to choose from, or a "YES" or "NO" problem), and the softmax function is used for multi-class classification. Digit recognition involves multiple classes, and we proceed onwards with the softmax function.
 
@@ -85,6 +93,8 @@ These days, finding datasets is easy since there are many platforms that make pu
 
 ## Process of model construction
 
+There are a plethora of different models already available that are trained on SVHN since the dataset's inception. We will detail each step from importing the dataset to quantizing and preparing it for use on microcontrollers.
+
 ### Setting up your environment
 
 In the course of the project, we've found four ways to set up the envrionment: Jupyter Notebook, Colab, Kaggle, or simply running Python.
@@ -93,15 +103,128 @@ Jupyter Notebook, Colab, Kaggle are recommended for two main reasons. First of a
 
 ### Import the dataset
 
+This varies based on the dataset you are going to use.
+
+Tensorflow makes available hundreds of datasets on its website, and they are free to use provided there are citations.
+
+To use any of the datasets in Tensorflow, you use the [**tfds.load(name: str, \*, split: ...)**](https://www.tensorflow.org/datasets/api_docs/python/tfds/load) API.
+
+SVHN is available through MATLAB, and we use the function [**scipy.io.loadmat**](https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.loadmat.html) for this.
+
 ### Preprocessing the dataset
 
+We are going to talk about SVHN specifically, and explain more generally on how preprocessing works.
+
+Preprocessing is required when the dataset is not currently in the format we would like it to be, or when the dataset needs to be cleaned or transformed to fit your model's requirements.
+
+Currently, if you import the SVHN dataset directly from their website, it will be in a object format with two keys: **'X'** and **'y'**. The former stores all of the images, whereas the latter stores all of the labels.
+
+```
+train_images = np.array(train_raw['X'])
+test_images = np.array(test_raw['X'])
+
+train_labels = np.array(train_raw['y'])
+test_labels = np.array(test_raw['y'])
+```
+
+Each image is a 4D array. Originally, the first and second axes indicate the number of rows and columns, and the third axis indicates the number of channels. A [channel] (https://en.wikipedia.org/wiki/Channel_(digital_image)) in computer vision is simply a grayscale version of the image but comprised of a particular color (i.e., RGB has three channels: red, blue and green; the red channel will take care of varying versions of red).
+
+The bigger problem is that the shape looks like this:
+
+```
+(32, 32, 3, 73257)
+(32, 32, 3, 26052)
+```
+
+The fourth axis indicates how many images are in the set (training or testing). It is far easier to access each image in the first axis than in the fourth axis because the commands are simpler:
+
+```
+# accessing the 30000th image in train_images
+train_images[0:32][0:32][0:3][30000] # accessing the image through the fourth axis
+train_images[30000] # accessing the image through the first axis
+```
+
+We use [np.moveaxis](https://numpy.org/doc/stable/reference/generated/numpy.moveaxis.html) to shift the axes over to the right:
+
+```
+train_images = np.moveaxis(-1, 0, train_images)
+test_images = np.moveaxis(-1, 0, test_images)
+```
+
+As part of the [quantization process](#model-compression-for-microcontrollers) and to reduce space, we need to convert the images themselves to a float datatype. We will use 32-bit float numbers.
+
+```
+train_images = train_images.astype('float32')
+test_images = test_images.astype('float32')
+```
+
+Converting the images to a float datatype requires us to normalize the images to maintain [the convention](https://www.mathworks.com/help/matlab/creating_plots/image-types.html) that a black color component is 0 and a white color component is 1.
+
+```
+train_images = train_images / 255.0
+test_images = test_images / 255.0
+```
+
+You will notice that each of the labels are arranged in a 1D array, but each element is an array in itself with 1 element. There are two key parts of multi-classification: identifying the number of classes that exist, and identifying which class best fits the input. In the dataset, there are 10 classes because there are 10 digits. Typically, in binary classification where there are two classes A and B, the input is in either A or B. In multi-class classification, this process is extended to determine which class in some number **n** of classes A_1, A_2, ..., A_n does the input belong to. This strategy is better known as [one vs. all](https://developers.google.com/machine-learning/crash-course/multi-class-neural-networks/one-vs-all#:~:text=all%20provides%20a%20way%20to,classifier%20for%20each%20possible%20outcome.), and is a foundation of neural networks.
+
+LabelBinarizer helps us to transform each labels so that each class can be indicated in a binary format. For example, in SVHN, if a digit is identified as 2, then its respective label is `[0 1 0 0 0 0 0 0 0 0]`.
+
+```
+lb = LabelBinarizer()
+train_labels = lb.fit_transform(train_labels)
+test_labels = lb.fit_transform(test_labels)
+```
+
+### Splitting the dataset
+
+[train_test_split](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html) is a function within `scikit-learn` that splits the training dataset into training and testing sets. The proportion of the images in the testing sets is an argument within the function. Both of these will be used during the training process.
+
+### Data augmentation
+
+[Data augmentation](https://www.tensorflow.org/tutorials/images/data_augmentation) relies on artificially changing the original dataset by adding new images that are slightly modified. This suggests that some of the images have transformed in some way, such as inducing a slant, zooming in and out of the images or shifting the height of the image. The goal of this is to increase the breadth of the images within the dataset so that the model habituates to images taken in different situations – in other words, it aims to prevent overfitting. Keras and Tensorflow offer [ImageDataGenerator](https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator), which can then be used during the model fitting process. As of Tensorflow 2.13.0, this function has been deprecated.
+
 ### Train the model
+
+Training the model requires you to do three things: construct the model's architecture, compile the model, and fit the model to the data.
+
+### Construct the model architecture
+
+For the most part, CNNs usually have different layers stacked on top of each other in which each layer accepts one input tensor and provides one output tensor. In Keras, this is called a [sequential model](https://keras.io/guides/sequential_model/) because the layers are ordered one after the other.
+
+There are a couple of ways to do this:
+
+```
+# First way
+model = keras.Sequential([
+  keras.layers.Conv2D(32, (4, 4), activation="relu", input_shape=(32, 32, 3)),
+  keras.layers.MaxPooling2D((2, 2)),
+  keras.layers.Dense(128, activation="relu"),
+  keras.layers.Dense(2, activation="sigmoid")
+])
+
+
+# Second way
+model = keras.Sequential(name="put_model_name_here")
+model.add(keras.layers.Conv2D(32, (4, 4), activation="relu", input_shape=(32, 32, 3)))
+model.add(keras.layers.MaxPooling2D((2, 2)))
+model.add(keras.layers.Dense(128, activation="relu"))
+model.add(keras.layers.Dense(2, activation="relu"))
+
+```
+
+### Compile the model
+
+### Fit the model to the data
 
 ### Evaluate the effectiveness of the model
 
 ### Writing the model to a .tflite file
 
 ### Model compression for microcontrollers
+
+Tensorflow Lite offers multiple techniques to compress a model's size. We investigate two techniques: quantization and pruning.
+
+In mathematics, quantization refers to
 
 ## References
 
