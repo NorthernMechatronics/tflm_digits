@@ -23,7 +23,7 @@ This example shows how to run [Tensorflow Lite for Microcontrollers (TFLM)](http
 
 ## Training the model
 
-See <!-- --> for more information.
+See [here](http://gitlab.northernmechatronics.com:50250/nmi/research/hotdog/-/tree/tflm/training_files) for more information.
 
 ## Converting the model
 
@@ -210,7 +210,7 @@ resolver.AddMul();
 resolver.AddQuantize();
 ```
 
-If you choose to use an operation either not currently within AllOpsResolver – that is, it exists in Tensorflow Core but not in Tensorflow Lite, you must first verify whether [Tensorflow Lite already supports it](https://www.tensorflow.org/mlir/tfl_ops). If it exists, you need to quantize the model with that given operation after training, and explicitly declare it using the function `tflite::MicroMutableOpResolver AddCustom()`. If you need to create a custom operator, you will need to follow the steps in [building and testing your own](https://www.tensorflow.org/lite/guide/ops_compatibility) before importing it into the model.
+If you choose to use an operation not currently within AllOpsResolver – that is, it exists in Tensorflow Core but not in Tensorflow Lite, you must first verify whether [Tensorflow Lite already supports it](https://www.tensorflow.org/mlir/tfl_ops). If it exists, you need to quantize the model with that given operation after training, and explicitly declare it using the function `tflite::MicroMutableOpResolver AddCustom()`. If you need to create a custom operator, you will need to follow the steps in [building and testing your own](https://www.tensorflow.org/lite/guide/ops_compatibility) before importing it into the model.
 
 In general, [Tensorflow Lite does not recommend building your own operations](https://www.tensorflow.org/lite/guide/ops_compatibility) unless needed for performance and size reasons.
 
