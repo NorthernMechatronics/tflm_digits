@@ -12,11 +12,22 @@ The purpose of this project is to demonstrate how to train a machine learning mo
   - [Model architecture: activation functions](#model-architecture-activation-functions)
   - [Choosing a good dataset](#choosing-a-good-dataset)
 - [Process of model construction](#process-of-model-construction)
+  - [Import the dataset](#import-the-dataset)
+  - [Preprocessing the dataset](#preprocessing-the-dataset)
+  - [Splitting the dataset](#splitting-the-dataset)
+  - [Data augmentation](#data-augmentation)
+  - [Train the model](#train-the-model)
+  - [Construct the model architecture](#construct-the-model-architecture)
+  - [Compile the model](#compile-the-model)
+  - [Fit the model to the data](#fit-the-model-to-the-data)
+  - [Evaluate the effectiveness of the model](#evaluate-the-effectiveness-of-the-model)
+  - [Writing the model to a .tflite file](#writing-the-model-to-a-tflite-file)
+  - [Model compression with microcontrollers](#model-compression-for-microcontrollers)
 - [References](#references)
 
 ## What are convolutional neural networks (CNN)?
 
-Convolutional neural networks (CNN) is a type of neural network where there are convolutional layers within the model. This is different from other networks because convolutional layers play a key role when recognizing important features within the input. In the case of this project, we are concerned with how a model intakes an image and processes it to produce a prediction.
+Convolutional neural networks (CNN) is a type of neural network where there are convolutional layers within the model. This is different from other networks because convolutional layers play a key role when recognizing important features within the input. We are concerned with how a model intakes an image and processes it to produce a prediction.
 
 #### Brief history behind CNNs
 
@@ -30,9 +41,9 @@ Other convolutional neural networks entered the fray. AlexNet, in 2012, consiste
 
 There are three main layers in a CNN: convolutional layers, fully connected layers, and max pooling layers. There are other optional layers that can be included, such as Dropout.
 
-Convolutional layers consist of two different components: the kernel and the stride. The kernel or filter, typically a 3x3 grid containing a number in each square, passes over the input and performs an [element-wise product](https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29#:~:text=In%20mathematics%2C%20the%20Hadamard%20product,elements%20i%2C%20j%20of%20the) over an identically sized matrix on the image. Before mapping the result, a [bias]() is added to the product. In Tensorflow, the numbers within the kernel are usually randomized through the normal distribution at 0, but are then learned throughout the training process.
+[Convolutional layers](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D) consist of two different components: the kernel and the stride. The kernel or filter, typically a 3x3 grid containing a number in each square, passes over the input and performs an [element-wise product](https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29#:~:text=In%20mathematics%2C%20the%20Hadamard%20product,elements%20i%2C%20j%20of%20the) over an identically sized matrix on the image. Before mapping the result, a [bias]() is added to the product. In Tensorflow, the numbers within the kernel are usually randomized through the normal distribution (mean at 0, standard deviation at 1), but are then learned throughout the training process.
 
-The stride length is the amount of squares the kernel moves once the element-wise product has been calculated. The kernel will pass over the image from left to right, and will shift down to the left side of the image until the kernel has passed over the entire image. In most cases, the stride length is 1 for vertical and horizontal shifts. In Tensorflow, there are parameters which allow you to [control the stride length](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D) for both vertical and horizontal shifts. Larger strides (e.g., stride length is 2 or 3 instead of 1) can be used to reduce resolution of the feature map.
+The stride length is the amount of squares the kernel moves once the element-wise product has been calculated. The kernel will pass over the image from left to right, and will shift down to the left side of the image until the kernel has passed over the entire image. In most cases, the stride length is 1 for vertical and horizontal shifts. In Tensorflow, there are parameters which allow you to [control the stride length](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D#args) for both vertical and horizontal shifts. Larger strides (e.g., stride length is 2 or 3 instead of 1) can be used to reduce resolution of the feature map.
 
 Convolutional layers are known to identify certain features from the input image. The nature of the element-wise product suggests that local clusters or patterns of pixel values in the input images are amplified. For instance, if an input image is a handwritten digit, pixels after convolution which have a markedly lower or higher value than other parts of an image could indicate a part of the digit instead of the background. Broadly, low-level features such as edges and colors captured in the first set of convolutional layers, whereas high-level features such as the overall space or background of the image is captured in later convolutional layers.
 
@@ -48,9 +59,9 @@ Dropout layers are not needed, but they exist to prevent overfitting. They work 
 
 For this section, we use **CONV** to represent convolutional layers, **POOL** for max pooling layers, and **DENSE** for fully connected layers.
 
-In many cases, it's enough to have the following:
+[In general](https://stanford.edu/~shervine/teaching/cs-230/cheatsheet-convolutional-neural-networks#overview), the architecture is as follows:
 
-INPUT -> CONV -> POOL -> DENSE -> DENSE -> OUTPUT
+INPUT -> CONV -> POOL -> DENSE -> OUTPUT
 
 We may have alternating convolutional and max pooling layers:
 
@@ -60,16 +71,16 @@ In some existing papers such as MobileNet, we have the following architecture:
 
 INPUT -> CONV -> CONV (DW) -> CONV -> CONV (DW) -> ... (repeat another 11 times) -> AVG POOL -> DENSE -> DENSE -> OUTPUT
 
-Note that CONV (DW) is a "depthwise convolution layer". Depthwise convolutions only convolve over one channel in an image, whereas normal convolutional layers convolve over all channels in an image. AVG POOL is an average pool layer (akin to a max pooling layer, but taking the average of all the numbers in a specified grid). In the first dense layer, all of the neurons from the previous pooling layer connect to all of the layers in the dense layer, and the second dense layer is the layer responsible for providing predictions, depending on the number of classes that exist.
+Note that CONV (DW) is a "depthwise convolution layer". Depthwise convolutions convolve over one channel in an image (e.g., either the red, green or blue channel), whereas normal convolutional layers convolve over all channels in an image. AVG POOL is an average pool layer (akin to a max pooling layer, but taking the average of all the numbers in a specified grid). In the first dense layer, all of the neurons from the previous pooling layer connect to all of the layers in the dense layer, and the second dense layer is the layer responsible for providing predictions, depending on the number of classes that exist.
 
 ### Model architecture: activation functions
 
 A crucial part of activation functions is the idea of linearity and non-linearity.
-Linear functions are of the form, **y = W'x + b'**, where W' is some weights matrix multipled by the input vector, and b' is the bias. When you input some vector into the linear activation function, the result is simply another vector. The problem is that if you were to take the entire set of vectors existing in a n dimensional space, they would also map a linear function. Non-linear functions on the other hand, are functions for which do not have a linear relationship between their variables. Think of functions that have curves or are piecewise.
+Linear functions are of the form, **y = W'x + b'**, where W' is some weights matrix multipled by the input vector, and b' is the bias. When you input some vector into the linear activation function, the result is simply another vector. The problem is that if you were to take the entire set of vectors existing in a n-dimensional space, they would also map a linear function. Non-linear functions on the other hand, are functions which do not have a linear relationship between their variables. Think of functions that have curves or are piecewise.
 
 Part of our goals when developing a machine learning algorithm is to determine more complicated and intricate relationships of the input data. Using linear activation functions limits the model to learn relations between input and outputs which are linear, whereas data in the real world tends to be less straight-forward and are usually non-linear.
 
-There are different types of functions that are useful for introducing non-linearity: ReLU, Sigmoid, Tanh and Softmax. For our purposes, we used ReLU and Softmax as our activation functions. In many articles, we'll see ReLU is largely used within a hidden layer – that is, a layer that is neither the first nor the last layer in a model. Softmax functions are used for the last layer in a model, although some articles have debated the usage of other functions such as sigmoid.
+There are different types of functions that are useful for introducing non-linearity: ReLU, Sigmoid, Tanh and Softmax. For our purposes, we used ReLU and Softmax as our activation functions. In many articles, we'll see ReLU is largely used within a hidden layer – that is, a layer that is neither the first nor the last layer in a model. The softmax function is used for the last layer in a model.
 
 Brief history lesson: in the past, tanh and sigmoid were considered great activation functions because not only were they non-linear, but they were also differentiable. Differentiability plays a key role during backpropagation when optimizing the weights during training.
 
@@ -99,7 +110,7 @@ There are a plethora of different models already available that are trained on S
 
 In the course of the project, we've found four ways to set up the envrionment: Jupyter Notebook, Colab, Kaggle, or simply running Python.
 
-Jupyter Notebook, Colab, Kaggle are recommended for two main reasons. First of all, these environments allow you to segment your code so that any errors that occur do not require you to run the entire script again. Furthermore, these environments already have most of the libraries that you need installed, so there is no need to run **pip install** for certain packages.
+Jupyter Notebook, Colab, Kaggle are recommended for two main reasons. First, these environments allow you to segment your code so that any errors that occur do not require you to run the entire script again. Furthermore, these environments already have most of the libraries that you need installed, so there is no need to run **pip install** for certain packages.
 
 ### Import the dataset
 
@@ -165,9 +176,9 @@ train_images = train_images / 255.0
 test_images = test_images / 255.0
 ```
 
-You will notice that each of the labels are arranged in a 1D array, but each element is an array in itself with 1 element. There are two key parts of multi-classification: identifying the number of classes that exist, and identifying which class best fits the input. In the dataset, there are 10 classes because there are 10 digits. Typically, in binary classification where there are two classes A and B, the input is in either A or B. In multi-class classification, this process is extended to determine which class in some number **n** of classes A_1, A_2, ..., A_n does the input belong to. This strategy is better known as [one vs. all](https://developers.google.com/machine-learning/crash-course/multi-class-neural-networks/one-vs-all#:~:text=all%20provides%20a%20way%20to,classifier%20for%20each%20possible%20outcome.), and is a foundation of neural networks.
+You will notice that each of the labels are arranged in a 1D array, but each element is an array in itself with 1 element. There are two key parts of multi-classification: identifying the number of classes that exist, and identifying which class best fits the input. In the dataset, there are 10 classes because there are 10 digits. Typically, in binary classification where there are two classes A and B, the input is in either A or B. In multi-class classification, this process is extended to determine which class in some number **n** of classes A_1, A_2, ..., A_n does the input belong to. This strategy is better known as [one vs. all](https://developers.google.com/machine-learning/crash-course/multi-class-neural-networks/one-vs-all#:~:text=all%20provides%20a%20way%20to,classifier%20for%20each%20possible%20outcome.).
 
-LabelBinarizer helps us to transform each labels so that each class can be indicated in a binary format. For example, in SVHN, if a digit is identified as 2, then its respective label is `[0 1 0 0 0 0 0 0 0 0]`.
+[LabelBinarizer](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelBinarizer.html) helps us to transform each labels so that each class can be indicated in a binary format. For example, in SVHN, if a digit is identified as 2, then its respective label is `[0 1 0 0 0 0 0 0 0 0]`.
 
 ```
 lb = LabelBinarizer()
@@ -177,7 +188,7 @@ test_labels = lb.fit_transform(test_labels)
 
 ### Splitting the dataset
 
-[train_test_split](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html) is a function within `scikit-learn` that splits the training dataset into training and testing sets. The proportion of the images in the testing sets is an argument within the function. Both of these will be used during the training process.
+[train_test_split](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html) is a function within `scikit-learn` that splits the training dataset into training and validation sets. The proportion of the images in the testing sets is an argument within the function. Both of these will be used during the training process.
 
 ### Data augmentation
 
@@ -191,7 +202,7 @@ Training the model requires you to do three things: construct the model's archit
 
 For the most part, CNNs usually have different layers stacked on top of each other in which each layer accepts one input tensor and provides one output tensor. In Keras, this is called a [sequential model](https://keras.io/guides/sequential_model/) because the layers are ordered one after the other.
 
-There are a couple of ways to do this:
+There are several ways to do this:
 
 ```
 # First way
@@ -214,17 +225,70 @@ model.add(keras.layers.Dense(2, activation="relu"))
 
 ### Compile the model
 
+When you [compile](https://www.tensorflow.org/api_docs/python/tf/keras/Model#compile) the model, you need to define three important parameters: the optimizers, the type of loss function, and the metrics you would like to use.
+
+During training, the machine learning algorithm tries to find a good set of weights and biases to form a good enough model that minimizes the error between the predictions it makes on a set of data points and the actual labels associated with each data point. The [loss function](https://developers.google.com/machine-learning/glossary#loss-function) calculates the loss.
+
+[Gradient descent](https://en.wikipedia.org/wiki/Gradient_descent) centers around the idea of finding a local minimum within a differentiable function – in this case, the function is the loss function There are different optimizers that implement this algorithm - we use [Adam](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam), which is based on [this paper](https://arxiv.org/abs/1412.6980). Certain hyperparameters exist to tweak the model during the training process, such as the [learning rate](https://www.youtube.com/watch?v=QzulmoOg2JE).
+
+[The metrics](https://www.tensorflow.org/api_docs/python/tf/keras/metrics) are simply different ways to measure the model's performance during training. [The accuracy](https://www.tensorflow.org/api_docs/python/tf/keras/metrics/Accuracy) is an important metric, because it allows us to measure the model's predictions against the actual labels associated to an image.
+
+Once you compile the model, you can run [model.summary()](https://www.tensorflow.org/api_docs/python/tf/keras/Model#summary) to understand the shape of each layer.
+
 ### Fit the model to the data
+
+Fitting the model to the data requires the use of [model.fit](https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit), which will train the model for some number of epochs (i.e., iterating over the entire dataset for a set number of times). If you augmented the data before training the model, you will need to use [ImageDataGenerator.flow](https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator#flow) within the fitting process.
+
+Within our examples, we use callbacks to stop training when there is no further improvement. This is called [early stopping](https://en.wikipedia.org/wiki/Early_stopping#:~:text=In%20machine%20learning%2C%20early%20stopping,training%20data%20with%20each%20iteration.), and it is often used to prevent overfitting.
 
 ### Evaluate the effectiveness of the model
 
+Evaluating the effectiveness of the model requires the use of a [testing set](https://stats.stackexchange.com/questions/19048/what-is-the-difference-between-test-set-and-validation-set). This set contains images along with their respective labels that the model has not yet seen during the training process. In Keras, we use [model.evaluate](https://www.tensorflow.org/api_docs/python/tf/keras/Model#evaluate).
+
 ### Writing the model to a .tflite file
+
+Converting the model requires you to first [build a converter](https://www.tensorflow.org/api_docs/python/tf/lite/TFLiteConverter#from_keras_model), then convert the model and [store it temporarily](https://www.tensorflow.org/api_docs/python/tf/lite/TFLiteConverter#convert).
 
 ### Model compression for microcontrollers
 
 Tensorflow Lite offers multiple techniques to compress a model's size. We investigate two techniques: quantization and pruning.
 
-In mathematics, quantization refers to
+[Quantization](https://www.mathworks.com/discovery/quantization.html#:~:text=Quantization%20is%20the%20process%20of,and%20range%20of%20a%20value.) is the technique of mapping an infinite number of continuous values to a set of discrete finite values. [In Tensorflow](https://www.tensorflow.org/lite/performance/model_optimization?hl=en), quantization reduces the precision of a model's parameters so that the model size is reduced but the accuracy is relatively maintained. This is important because the constraints on microcontrollers are stricter than those in mobile or computer devices, specifically the size of the model and effective computational power.
+
+When working with microcontrollers, we use [post-training integer quantization](https://www.tensorflow.org/lite/performance/post_training_integer_quant?hl=en#convert_using_integer-only_quantization) since it is easy to implement directly into the compression process. Tensorflow Lite for Microcontrollers supports a [limited number of configurations](https://github.com/tensorflow/tflite-micro/blob/main/tensorflow/lite/micro/kernels/dequantize.cc) where the input and output tensors must be one of several data types.
+
+Some key things to note:
+
+- You are required to generate a representative dataset from your training images.
+- The inference input and output types should both be the same, and must be of some integer type (either tf.uint8 or tf.int8). In some examples, TFLM suggests using the signed format (tf.int8).
+
+```
+# Representative dataset containing 400 images
+def representative_data_gen():
+    for input_value in tf.data.Dataset.from_tensor_slices(train_images).batch(1).take(400):
+        yield[tf.dtypes.cast(input_value, tf.float32)]
+
+
+# Optimize the model
+"""
+For our purposes, we will use integer quantization, and use the
+default signatures that Keras API leverages.
+"""
+converter.optimizations = [tf.lite.Optimize.DEFAULT]
+converter.representative_dataset = representative_data_gen
+# If any operations can't be quantized, converter throws an error
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+# Set input and output tensors to uint8
+converter.inference_input_type = tf.uint8
+converter.inference_output_type = tf.uint8
+tflite_model_quant = converter.convert()
+tflite_model_quant_file = tflite_models_dir/NAME_OF_TF_QUANT_MODEL
+tflite_model_quant_file.write_bytes(tflite_model_quant)
+```
+
+[Pruning](https://www.tensorflow.org/model_optimization/guide/pruning?hl=en) centers its focus on removing weights during the training process that have little impact on the model's accuracy. This makes the model easier to compress and the model's size during compression is reduced significantly. It is important to note that the model's size on disk is generally the same, but pruning helps to make downloading the model a lot more easier. According to Tensorflow, pruning is experimental on computer vision problems.
+
+Tensorflow provides a [good tutorial](https://www.tensorflow.org/model_optimization/guide/pruning/comprehensive_guide?hl=en) on how to perform pruning on a dataset.
 
 ## References
 
