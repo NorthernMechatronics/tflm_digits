@@ -86,9 +86,9 @@ Brief history lesson: in the past, tanh and sigmoid were considered great activa
 
 ReLU stands for rectified linear unit. ReLU is simply defined as the piecewise function **f(x) = max{0, x}** where x is just the input value. Although this function apperas linear, this function is considered non-linear because it does not represent a linear function – any negative inputs automatically output zero.
 
-Softmax is a function represented by the following function: **f(z)\_i = (e^z_i)/(sum of e^z_j from 1 to K)**. In essence, this function transforms some number of real numbers (K real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification.
+Softmax is a function that transforms some number of real numbers (K real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification.
 
-Sigmoid is another function similar to softmax, represented by the following function: **S(x) = 1/(1+ e^-x)**. Similar to softmax, the sigmoid function plotted on a graph is a non-linear function with the slope at its highest marked when x = 0. Sigmoid and softmax are both used in classification problems, but the sigmoid function is used for binary classification (i.e., when there are two classes to choose from, or a "YES" or "NO" problem), and the softmax function is used for multi-class classification. Digit recognition involves multiple classes, and we proceed onwards with the softmax function.
+Similar to softmax, the sigmoid function plotted on a graph is a non-linear function with the slope at its highest marked when x = 0. Sigmoid and softmax are both used in classification problems, but the sigmoid function is used for binary classification (i.e., when there are two classes to choose from, or a "YES" or "NO" problem), and the softmax function is used for multi-class classification. Digit recognition involves multiple classes, and we proceed onwards with the softmax function.
 
 ### Choosing a good dataset
 
