@@ -11,6 +11,7 @@ The purpose of this project is to demonstrate how to train a machine learning mo
   - [Model architecture: how do you arrange them?](#model-architecture-how-do-you-arrange-them)
   - [Model architecture: activation functions](#model-architecture-activation-functions)
   - [Choosing a good dataset](#choosing-a-good-dataset)
+- [Tensorflow vs. Keras](#tensorflow-and-keras)
 - [Process of model construction](#process-of-model-construction)
   - [Import the dataset](#import-the-dataset)
   - [Preprocessing the dataset](#preprocessing-the-dataset)
@@ -21,6 +22,8 @@ The purpose of this project is to demonstrate how to train a machine learning mo
   - [Compile the model](#compile-the-model)
   - [Fit the model to the data](#fit-the-model-to-the-data)
   - [Evaluate the effectiveness of the model](#evaluate-the-effectiveness-of-the-model)
+  - [Loss and accuracy](#loss-and-accuracy)
+  - [Overfitting and underfitting](#overfitting-and-underfitting)
   - [Writing the model to a .tflite file](#writing-the-model-to-a-tflite-file)
   - [Model compression with microcontrollers](#model-compression-for-microcontrollers)
 - [References](#references)
@@ -82,8 +85,6 @@ Part of our goals when developing a machine learning algorithm is to determine m
 
 There are different types of functions that are useful for introducing non-linearity: ReLU, Sigmoid, Tanh and Softmax. For our purposes, we used ReLU and Softmax as our activation functions. In many articles, we'll see ReLU is largely used within a hidden layer – that is, a layer that is neither the first nor the last layer in a model. The softmax function is used for the last layer in a model.
 
-Brief history lesson: in the past, tanh and sigmoid were considered great activation functions because not only were they non-linear, but they were also differentiable. Differentiability plays a key role during backpropagation when optimizing the weights during training.
-
 ReLU stands for rectified linear unit. ReLU is simply defined as the piecewise function **f(x) = max{0, x}** where x is just the input value. Although this function apperas linear, this function is considered non-linear because it does not represent a linear function – any negative inputs automatically output zero.
 
 Softmax is a function that transforms some number of real numbers (K real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification.
@@ -102,6 +103,10 @@ These days, finding datasets is easy since there are many platforms that make pu
   - feature representation: how do you handle outliers? If there are data points that are out of ordinary, do we discard those data?
   - minimizing skew: your dataset needs to closely match what you will do when you use the model. The model trained on a dataset intended to recognize animals in the desert should be used to predict animals in the desert (or in general).
 
+## Tensorflow and Keras
+
+Keras and Tensorflow go hand in hand. Tensorflow is an open-source platform developed by Google used to build machine learning and/or deep learning models, whereas Keras is the API used on Tensorflow to construct the models themselves. Keras is the high-level interface that allows you to abstract much of the work needed to produce a solid model, such as tweaking hyperparameters in the model or data processing. People who start learning Tensorflow will learn Keras at the same time.
+
 ## Process of model construction
 
 There are a plethora of different models already available that are trained on SVHN since the dataset's inception. We will detail each step from importing the dataset to quantizing and preparing it for use on microcontrollers.
@@ -111,6 +116,21 @@ There are a plethora of different models already available that are trained on S
 In the course of the project, we've found four ways to set up the envrionment: Jupyter Notebook, Colab, Kaggle, or simply running Python.
 
 Jupyter Notebook, Colab, Kaggle are recommended for two main reasons. First, these environments allow you to segment your code so that any errors that occur do not require you to run the entire script again. Furthermore, these environments already have most of the libraries that you need installed, so there is no need to run **pip install** for certain packages.
+
+Here are some tutorials and documentation files for setting up your environment:
+
+Jupyter Notebook:
+
+- [https://docs.jupyter.org/en/latest/](https://docs.jupyter.org/en/latest/)
+- [https://www.youtube.com/watch?v=HW29067qVWk](https://www.youtube.com/watch?v=HW29067qVWk)
+
+Colab (requires some sort of Gmail account):
+
+- [https://colab.research.google.com/drive/16pBJQePbqkz3QFV54L4NIkOn1kwpuRrj](https://colab.research.google.com/drive/16pBJQePbqkz3QFV54L4NIkOn1kwpuRrj)
+
+Kaggle (requires you to create an account):
+
+- [https://www.kaggle.com/docs/datasets](https://www.kaggle.com/docs/datasets)
 
 ### Import the dataset
 
@@ -229,7 +249,7 @@ When you [compile](https://www.tensorflow.org/api_docs/python/tf/keras/Model#com
 
 During training, the machine learning algorithm tries to find a good set of weights and biases to form a good enough model that minimizes the error between the predictions it makes on a set of data points and the actual labels associated with each data point. The [loss function](https://developers.google.com/machine-learning/glossary#loss-function) calculates the loss.
 
-[Gradient descent](https://en.wikipedia.org/wiki/Gradient_descent) centers around the idea of finding a local minimum within a differentiable function – in this case, the function is the loss function There are different optimizers that implement this algorithm - we use [Adam](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam), which is based on [this paper](https://arxiv.org/abs/1412.6980). Certain hyperparameters exist to tweak the model during the training process, such as the [learning rate](https://www.youtube.com/watch?v=QzulmoOg2JE).
+[Gradient descent](https://en.wikipedia.org/wiki/Gradient_descent) centers around the idea of finding a local minimum within a differentiable function – in this case, the function is the loss function. There are different optimizers that implement this algorithm - we use [Adam](https://www.tensorflow.org/api_docs/python/tf/keras/optimizers/Adam), which is based on [this paper](https://arxiv.org/abs/1412.6980). Certain hyperparameters exist to tweak the model during the training process, such as the [learning rate](https://www.youtube.com/watch?v=QzulmoOg2JE).
 
 [The metrics](https://www.tensorflow.org/api_docs/python/tf/keras/metrics) are simply different ways to measure the model's performance during training. [The accuracy](https://www.tensorflow.org/api_docs/python/tf/keras/metrics/Accuracy) is an important metric, because it allows us to measure the model's predictions against the actual labels associated to an image.
 
@@ -244,6 +264,30 @@ Within our examples, we use callbacks to stop training when there is no further 
 ### Evaluate the effectiveness of the model
 
 Evaluating the effectiveness of the model requires the use of a [testing set](https://stats.stackexchange.com/questions/19048/what-is-the-difference-between-test-set-and-validation-set). This set contains images along with their respective labels that the model has not yet seen during the training process. In Keras, we use [model.evaluate](https://www.tensorflow.org/api_docs/python/tf/keras/Model#evaluate).
+
+### Loss and accuracy
+
+First of all, we need to distinguish between training, validation and testing sets.
+
+The set of data we use to [fit the model](#fit-the-model-to-the-data) was the training set. After each epoch, we evaluated the accuracy of the model through a separate set of images called the validation set. This is intended to [tune the hidden layers within the neural network](https://en.wikipedia.org/wiki/Training,_validation,_and_test_data_sets). We generated the validation set during the train_test_split in [splitting the dataset](#splitting-the-dataset).
+
+After fitting the model, we [evaluate the effectiveness of the model](#evaluate-the-effectiveness-of-the-model) using a testing set, which is not seen during the training process.
+
+From Google for Developers, [loss](https://developers.google.com/machine-learning/crash-course/descending-into-ml/training-and-loss) is seen as a penalty for the model making a bad prediction during training and/or validation. For instance, if a model consistently mislabels an image of a digit 2 as a number 4, the loss will increase. The number produced by the loss is dependent on the type of loss function you use.
+
+[Accuracy](https://developers.google.com/machine-learning/crash-course/classification/accuracy) is simply a metric that measures how many correct predictions out of total predictions the model has made. This is seen during both the training and validation stages of training the model.
+
+### Overfitting and underfitting
+
+Generally, when a model overfits, the model can easily recognize data points located within the training set, but fails to recognize other points outside of the training set. On the other hand, when a model underfits, the model fails to recognize the relationship between the input (i.e., the image) and the output (i.e., the label of the image), which increases the error of the course of its training and validation stages.
+
+To investigate whether a model is overfitting, look at the training and validation loss in tandem. If the training loss is considerably lower than the validation or testing loss, then it is likely that the model is overfitting, because it failed to recognize images the model has never seen before.
+
+Underfitting is usually seen in graphs where the validation loss flattens or reaches some sort of minimum and never decreases in spite of the number of epochs or the number of data points in the training set.
+
+If you see that your validation loss is less than training loss, then it is likely you are either doing data augmentation (which makes the training set harder than the validation set), dropout or batch normalization layers.
+
+![Classification on overfit and underfit](/images/classification-underift.png?raw=true 'Table of underfitting, just right and overfitting models')
 
 ### Writing the model to a .tflite file
 
