@@ -287,7 +287,7 @@ Underfitting is usually seen in graphs where the validation loss flattens or rea
 
 If you see that your validation loss is less than training loss, then it is likely you are either doing data augmentation (which makes the training set harder than the validation set), dropout or batch normalization layers.
 
-![Classification on overfit and underfit](/images/classification-underift.png?raw=true 'Table of underfitting, just right and overfitting models')
+![Classification on overfit and underfit](../images/classification_training.jpg?raw=true 'Table of underfitting, just right and overfitting models')
 
 ### Writing the model to a .tflite file
 
