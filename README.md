@@ -6,6 +6,7 @@ This example shows how to run [Tensorflow Lite for Microcontrollers (TFLM)](http
 
 - [Training the model](#training-the-model)
 - [Converting the model](#converting-the-model)
+- [Setting up the module with the camera](#setting-up-the-module-with-the-camera)
 - [Model settings](#model-settings)
 - [Running inferences on the model](#running-inferences-on-the-model)
   - [Discussions on importing operations for a resolver](#discussions-on-importing-operations-for-a-resolver)
@@ -36,6 +37,21 @@ xxd -i name_of_model.tflite > name_of_model.cpp
 To ensure proper alignment when running the model, you must add `alignas(8)` at the start of the definition.
 
 The .cpp file contains two variables, one containing the hexadecimal bytes of the model and the other one containing the length of the array (or the size of the model). Once created, you must add a header file with the same name and export their declarations. There are examples on how to do this with `quant_model_small.h`, `quant_model_medium.h`, `quant_model_large.h`
+
+## Setting up the module with the camera
+
+The camera used alongside the NM180100 module was the [Arducam Mega 3MP SPI Camera](https://www.arducam.com/camera-for-any-microcontroller).
+
+There is a [whole host of documentation](https://docs.arducam.com/Arduino-SPI-camera/MEGA-SPI/MEGA-SPI-Camera/#common-specifications) online along with the specifications and [diagram](https://www.arducam.com/product/presale-mega-3mp-color-rolling-shutter-camera-module-with-solid-camera-case-for-any-microcontroller/) for the camera.
+
+Pay attention to where you connect each pin to the evaluation board (EVB). In **bsp_pins.src**, located within the bsp/nm180100evb folder, the following connections to the EVB are mentioned:
+
+- VCC (power source) connects to either 5V or 3.3V
+- GND (ground) connects to any ground pin named GND
+- SCK (clock signal) connects to pin 5
+- MISO (master in, slave out) connects to pin 6
+- MOSI (master out, slave in) connects to pin 7
+- CS (chip select) connects to pin 11
 
 ## Model settings
 
@@ -289,7 +305,7 @@ sizes through kTensorArenaSize in order to find the minimum needed to run the mo
 
 ### Poor alignment
 
-This may not necessarily be coming from TFLM but rather from the microcontroller. Ensure that you add **alignas(8)** at the beginning of the model's definition:
+This may not necessarily be coming from TFLM but rather from the module. Ensure that you add **alignas(8)** at the beginning of the model's definition:
 
 ```
 alignas(8) const unsigned char model_name = {
