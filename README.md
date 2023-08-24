@@ -59,9 +59,7 @@ See `model_settings.cc` and `model_settings.h` for more details.
 
 Any model imported will have different settings (i.e., different input and output tensors) depending on their use case. In order to prevent errors during runtime, you **must** explicitly declare the input and output dimensions, along with the output format.
 
-To figure out the correct dimensions and format, you must return back to your file from which you trained the model and check the interpreter's dimensions. Alternatively, you can upload your file to this [Colab file](https://colab.research.google.com/drive/1pdGA1Bw2lMcB66HFVWosK0YfwB1oaRLl#scrollTo=a-seiDlzCKpr), and determine the details from there. Follow the instructions in the file.
-
-![Picture of the input and output dimensions and data types for a given model](/images/input_output_details.png?raw=true 'Input and Output details')
+To figure out the correct dimensions and format, you must return back to your file from which you trained the model and check the interpreter's dimensions. Alternatively, you can upload your file to this [Colab file](https://colab.research.google.com/drive/1pdGA1Bw2lMcB66HFVWosK0YfwB1oaRLl#scrollTo=a-seiDlzCKpr), or run the model_details.ipynb file located in this folder and determine the details from there.
 
 ## Running inferences on the model
 
@@ -197,7 +195,7 @@ For the purposes below, steps 1-8 will be done within the **tflm_setup()** funct
     the inferences. You should define these details in some way in `model_settings.cc` and `model_settings.h`, and provide a readable format when
     providing the predictions.
 
-    We show an example in how we print out the predictions through the **prediction_results(int8_t \*out, size_t len)** function.
+    We show an example in how we print out the predictions through the **prediction_results** function.
 
 ### Discussions on importing operations for a resolver
 
@@ -343,8 +341,6 @@ Whichever type you choose, check that you are copying the image and returning th
 - The output buffer `out` passed in as a parameter in `tflm_inference` should be set to `int8_t` in `tflm.cc` and `tflm.h`.
 
 For **tf.uint8**, the destination during memcpy should be `input->data.uint8`, and the output buffer `out` should be set to `uint8_t`. In tflm.cc, you should also adjust any error checking during setup and inferences so that the model does not return an error
-
-Note: TFLM can support **float16_t** input and output types, and you may choose to quantize through float fallback quantization. However, returning a prediction using a 16-bit float can be hard to discern, because it makes use of an exponent (i.e., 0.14625 is represented as 1.17 \* 2^-3).
 
 ### Improper input and output tensor shapes
 
