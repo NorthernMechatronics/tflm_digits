@@ -36,7 +36,7 @@ Convolutional neural networks (CNN) is a type of neural network where there are 
 
 Convolutional neural networks first came into the limelight around the 1980s. A significant discovery was when Yann Lecun developed a model to recognize handwritten digits through the use of convolutional layers that had 5x5 kernels and 2x2 max-pooling layers, called [LeNet](http://vision.stanford.edu/cs598_spring07/papers/Lecun98.pdf). LeNet became a key discovery but was limiting since it required thousands of images to train and images were largely low resolution. The [Modified National Institute of Standards and Technology (MNIST) database](https://en.wikipedia.org/wiki/MNIST_database) is a good foundation for training image processing systems.
 
-Other convolutional neural networks entered the fray. [AlexNet](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf), in 2012, consisted of varying sizes of convolution layers whereas [InceptionNet](https://arxiv.org/pdf/1409.4842.pdf) focused on deep sequential models with various sizes of kernels in its convolutional layers with the goal of better performance. VGG is noted as a good start for transfer learning, for its small convolutional kernels (3x3 compared to 5x5) makes it computationally easier without the added complexity. On top of that, MobileNet became an important model for edge devices as the architecture is less resource intensive.
+Other convolutional neural networks entered the fray. [AlexNet](https://proceedings.neurips.cc/paper_files/paper/2012/file/c399862d3b9d6b76c8436e924a68c45b-Paper.pdf), in 2012, consisted of varying sizes of convolution layers whereas [InceptionNet](https://arxiv.org/pdf/1409.4842.pdf) focused on deep sequential models with various sizes of kernels in its convolutional layers with the goal of better performance. [VGG](https://www.mathworks.com/help/deeplearning/ref/vgg16.html) is noted as a good start for transfer learning, for its small convolutional kernels (3x3 compared to 5x5) makes it computationally easier without the added complexity. On top of that, [MobileNet](https://arxiv.org/pdf/1704.04861.pdf) became an important model for mobile devices as the architecture is less resource intensive.
 
 ## What plays into a good model?
 
@@ -44,7 +44,7 @@ Other convolutional neural networks entered the fray. [AlexNet](https://proceedi
 
 There are three main layers in a CNN: [convolutional layers, fully connected layers, and max pooling layers](https://stanford.edu/~shervine/teaching/cs-230/cheatsheet-convolutional-neural-networks#overview). There are other optional layers that can be included, such as Dropout.
 
-[Convolutional layers](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D) consist of two different components: the kernel and the stride. The kernel or filter, typically a 3x3 grid containing a number in each square, passes over the input and performs an [element-wise product](https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29#:~:text=In%20mathematics%2C%20the%20Hadamard%20product,elements%20i%2C%20j%20of%20the) over an identically sized matrix on the image. Before mapping the result, a [bias](https://developers.google.com/machine-learning/glossary#bias-math-or-bias-term) is added to the product. In Tensorflow, the numbers within the kernel are usually randomized through the normal distribution (mean at 0, standard deviation at 1), but are then learned throughout the training process.
+[Convolutional layers](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D) consist of two different components: the kernel and the stride. The kernel or filter, typically a 3x3 grid containing a number in each square, passes over the input and performs an [element-wise product](https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29#:~:text=In%20mathematics%2C%20the%20Hadamard%20product,elements%20i%2C%20j%20of%20the) over an identically sized matrix on the image. Before mapping the result, a [bias](https://developers.google.com/machine-learning/glossary#bias-math-or-bias-term) is added to the product. In Tensorflow, the numbers within the kernel are usually randomized through the [normal distribution (mean at 0, standard deviation at 1)](https://en.wikipedia.org/wiki/Normal_distribution), but are then learned throughout the training process.
 
 The stride length is the amount of squares the kernel moves once the element-wise product has been calculated. The kernel will pass over the image from left to right, and will shift down to the left side of the image until the kernel has passed over the entire image. In most cases, the stride length is 1 for vertical and horizontal shifts. In Tensorflow, there are parameters which allow you to [control the stride length](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Conv2D#args) for both vertical and horizontal shifts. Larger strides (e.g., stride length is 2 or 3 instead of 1) can be used to reduce resolution of the feature map.
 
@@ -84,13 +84,13 @@ There are different types of functions that are useful for introducing non-linea
 
 [ReLU stands for rectified linear unit](https://www.tensorflow.org/api_docs/python/tf/nn/relu). ReLU is simply defined as the piecewise function **f(x) = max{0, x}** where x is just the input value. Although this function apperas linear, this function is considered non-linear because it does not represent a linear function – any negative inputs automatically output zero.
 
-[Softmax](https://www.tensorflow.org/api_docs/python/tf/nn/softmax) is a function that transforms some number of real numbers (K real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification, especially multi-class classification. Since digit recognition involves multiple classes, using the softmax function in the last layer is a good choice.
+[Softmax](https://www.tensorflow.org/api_docs/python/tf/nn/softmax) is a function that transforms some number of real numbers (**K** real numbers) to a probability distribution. Evidently, this function is used as the last activation function becaue we would like to represent the output of the neural network to some sort of probability distribution when we perform image classification, especially multi-class classification. Since digit recognition involves multiple classes, using the softmax function in the last layer is a good choice.
 
 ### Choosing a good dataset
 
 We'll use information from [Google for Developers](https://developers.google.com/machine-learning/data-prep/construct/collect/data-size-quality) to summarize our findings.
 
-These days, finding datasets is easy since there are many platforms that make publicly available datasets easy to find. Tensorflow makes this easy by way of their API functions such as **tf.data.Datasets**, which allow you to create a seamless input pipeline. However, finding datasets that ideally suits your needs is harder. To evaluate what you need from your dataset, consider:
+These days, finding datasets is easy since there are many platforms that make datasets publicly available. Tensorflow facilitates this by way of their API functions such as **tf.data.Datasets**, which allow you to create a seamless input pipeline. However, finding datasets that ideally suits your needs is harder. To evaluate what you need from your dataset, consider:
 
 - the size of the dataset. There is no set number on how many data points or images you need. One argues that for each class you have, you should have at least 1000 data points in your training set. This is not necessarily arbitrary since deep learning requires a lot of data and this can be feasible. However, it is important to not misconstrue that more data points are necessarily better, even if they are of bad quality.
 - the quality of the dataset. A successful dataset works to solve the problem you want to achieve. There are certain aspects you want to consider:
@@ -100,7 +100,7 @@ These days, finding datasets is easy since there are many platforms that make pu
 
 ## Tensorflow and Keras
 
-Keras and Tensorflow go hand in hand. Tensorflow is an open-source platform developed by Google used to build machine learning and/or deep learning models, whereas Keras is the API used on Tensorflow to construct the models themselves. Keras is the high-level interface that allows you to abstract much of the work needed to produce a solid model, such as tweaking hyperparameters in the model or data processing. People who start learning Tensorflow will learn Keras at the same time.
+[Keras and Tensorflow go hand in hand](https://www.tensorflow.org/guide/keras). Tensorflow is an open-source platform developed by Google used to build machine learning and/or deep learning models, whereas Keras is the API used on Tensorflow to construct the models themselves. Keras is the high-level interface that allows you to abstract much of the work needed to produce a solid model, such as tweaking hyperparameters in the model or data processing. People who start learning Tensorflow will learn Keras at the same time.
 
 ## Process of model construction
 
@@ -173,8 +173,8 @@ train_images[30000] # accessing the image through the first axis
 We use [np.moveaxis](https://numpy.org/doc/stable/reference/generated/numpy.moveaxis.html) to shift the axes over to the right:
 
 ```
-train_images = np.moveaxis(-1, 0, train_images)
-test_images = np.moveaxis(-1, 0, test_images)
+train_images = np.moveaxis(train_images, -1, 0)
+test_images = np.moveaxis(test_images, -1, 0)
 ```
 
 As part of the [quantization process](#model-compression-for-microcontrollers) and to reduce space, we need to convert the images themselves to a float datatype. We will use 32-bit float numbers.
@@ -207,7 +207,7 @@ test_labels = lb.fit_transform(test_labels)
 
 ### Data augmentation
 
-[Data augmentation](https://www.tensorflow.org/tutorials/images/data_augmentation) relies on artificially changing the original dataset by adding new images that are slightly modified. This suggests that some of the images have transformed in some way, such as inducing a slant, zooming in and out of the images or shifting the height of the image. The goal of this is to increase the breadth of the images within the dataset so that the model habituates to images taken in different situations – in other words, it aims to prevent overfitting. Keras and Tensorflow offer [ImageDataGenerator](https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator), which can then be used during the model fitting process. As of Tensorflow 2.13.0, this function has been deprecated.
+[Data augmentation](https://www.tensorflow.org/tutorials/images/data_augmentation) relies on artificially changing the original dataset by adding new images that are slightly modified. This suggests that some of the images have transformed in some way, such as inducing a slant, zooming in and out of the images or shifting the height of the image. The goal of this is to increase the breadth of the images within the dataset so that the model habituates to images taken in different situations – in other words, it aims to prevent overfitting. Keras and Tensorflow offer [ImageDataGenerator](https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator), which can then be used during the model fitting process. As of the time of writing, this function is deprecated.
 
 ### Train the model
 
