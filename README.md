@@ -4,27 +4,29 @@ This example shows how to run [Tensorflow Lite for Microcontrollers (TFLM)](http
 
 ## Table of Contents
 
-- [Training the model](#training-the-model)
-- [Converting the model](#converting-the-model)
-- [Setting up the module with the camera](#setting-up-the-module-with-the-camera)
-- [Model settings](#model-settings)
-- [Running inferences on the model](#running-inferences-on-the-model)
-  - [Discussions on importing operations for a resolver](#discussions-on-importing-operations-for-a-resolver)
-  - [How to use Netron](#how-to-use-netron)
-- [Running the build](#running-the-build)
-- [Possible errors related to running the build](#possible-errors-related-to-running-the-build)
-  - ["Sorry, could not find a PTY" or "Cannot open line... for R/W: Resource busy" from MacOS terminal](#sorry-could-not-find-a-pty-or-cannot-open-line-for-rw-resource-busy-from-macos-terminal)
-- [Possible errors directly related to TFLM](#possible-errors)
-  - [Poor alignment](#poor-alignment)
-  - [AllocateTensors() failed](#allocatetensors-failed)
-  - [Declaring arrays in the inference function](#declaring-arrays-in-the-inference-function)
-  - [Improper input and output tensor types](#improper-input-and-output-tensor-types)
-  - [Improper input and output tensor shapes](#improper-input-and-output-tensor-shapes)
-  - [Predictions are not printing out properly](#predictions-are-not-printing-out-properly)
+- [Tensorflow Lite for Microcontrollers documentation](#tensorflow-lite-for-microcontrollers-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Training the model](#training-the-model)
+  - [Converting the model](#converting-the-model)
+  - [Setting up the module with the camera](#setting-up-the-module-with-the-camera)
+  - [Model settings](#model-settings)
+  - [Running inferences on the model](#running-inferences-on-the-model)
+    - [Discussions on importing operations for a resolver](#discussions-on-importing-operations-for-a-resolver)
+    - [How to use Netron](#how-to-use-netron)
+  - [Running the build](#running-the-build)
+  - [Possible errors related to running the build](#possible-errors-related-to-running-the-build)
+    - ["Sorry, could not find a PTY" or "Cannot open line... for R/W: Resource busy" from MacOS terminal](#sorry-could-not-find-a-pty-or-cannot-open-line-for-rw-resource-busy-from-macos-terminal)
+  - [Possible errors directly related to TFLM](#possible-errors-directly-related-to-tflm)
+    - [AllocateTensors() failed](#allocatetensors-failed)
+    - [Poor alignment](#poor-alignment)
+    - [Declaring arrays in the inference function](#declaring-arrays-in-the-inference-function)
+    - [Improper input and output tensor types](#improper-input-and-output-tensor-types)
+    - [Improper input and output tensor shapes](#improper-input-and-output-tensor-shapes)
+    - [Predictions are not printing out properly](#predictions-are-not-printing-out-properly)
 
 ## Training the model
 
-See [here](http://gitlab.northernmechatronics.com:50250/nmi/research/hotdog/-/tree/tflm/training_files) for more information.
+See [here](training_files) for more information.
 
 ## Converting the model
 
