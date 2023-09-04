@@ -72,6 +72,7 @@ target_sources(
     camera_task.c
     camera_task_cli.c
     console_task.c
+    stub.c
 
     drivers/arducam/ArducamAmbiqHAL.c
     drivers/arducam/ArducamCamera.c

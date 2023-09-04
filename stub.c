@@ -1,7 +1,7 @@
 /*
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Northern Mechatronics, Inc.
+ * Copyright (c) 2023, Northern Mechatronics, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,36 +29,48 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _LORAWAN_CONFIG_H_
-#define _LORAWAN_CONFIG_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <reent.h>
 
-#include <LmHandler.h>
+int _close(int fd)
+{
+    return -1;
+}
 
-#define LORAWAN_EEPROM_NUMBER_OF_PAGES    (2)
-#define LORAWAN_EEPROM_START_ADDRESS      (AM_HAL_FLASH_INSTANCE_SIZE - (LORAWAN_EEPROM_NUMBER_OF_PAGES * AM_HAL_FLASH_PAGE_SIZE))
+int _lseek(int file, int ptr, int dir)
+{
+    return 0;
+}
 
-#define LORAWAN_CLOCK_SOURCE    AM_HAL_STIMER_XTAL_32KHZ
-#define LORAWAN_CLOCK_PERIOD    32768
+int _read(int file, char *ptr, int len)
+{
+    return 0;
+}
 
-// The maximum payload size assuming FOpts field is not used is 242 bytes.
-// Each data fragment message consists of a 2 byte index.  Hence, each
-// fragment has an actual data block size of 240 bytes.
-#define LORAWAN_FRAGMENT_MAX_SIZE       (240)
+int _write(int file, char *ptr, int len)
+{
+    return len;
+}
 
-// The maximum number of fragments assuming a smallest fragment size
-// of 50 bytes.  This allows an image size of:
-//    409,600 bytes at the lowest data rate
-//  1,966,080 bytes at the highest data rate
-#define LORAWAN_FRAGMENT_MAX_NUMBER    (8192)
+int _fstat(int fd, struct stat *buffer)
+{
+    return -1;
+}
 
-// The redundancy number selected is based on the acceptable frame
-// error rate in 3G and LTE since the LoRaWAN spec does
-// not specify an acceptable error rate.  For 8192 number of fragments
-// and an error rate of 1.25%, we require at least:
-//
-//      8192 * 0.0125 = 102.4 or 103 redundancy fragments
-// 
-// We will use 160 for redundancy.
-#define LORAWAN_FRAGMENT_MAX_REDUNDANCY  (160)
+int _getpid(void)
+{
+    return 0;
+}
 
-#endif
+int _isatty(int fd)
+{
+    return 0;
+}
+
+int _kill(pid_t pid, int sig)
+{
+    return -1;
+}

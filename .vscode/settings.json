@@ -9,12 +9,8 @@
     "cmake.configureArgs": [
         "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/nmsdk2/targets/nm180100/build.cmake",
         "-DRAT_LORAWAN_ENABLE=OFF",
-        "-DRAT_BLE_ENABLE=OFF"
+        "-DRAT_BLE_ENABLE=OFF",
+        "-DTF_ENABLE=ON"
     ],
-    "cmake.generator": "Unix Makefiles",
-    "files.associations": {
-        "am_mcu_apollo.h": "c",
-        "am_util.h": "c",
-        "am_util_delay.h": "c"
-    },
+    "cmake.generator": "Unix Makefiles"
 }

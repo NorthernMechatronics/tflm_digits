@@ -124,29 +124,6 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
     }
 }
 
-/*
- * newlib stubs definition
- */
-int _close_r(struct _reent *r, int fd)
-{
-    return -1;
-}
-
-_off_t _lseek_r(struct _reent *r, int fd, _off_t offset, int whence)
-{
-    return -1;
-}
-
-_ssize_t _read_r(struct _reent *r, int fd, void *ptr, size_t len)
-{
-    return -1;
-}
-
-_ssize_t _write_r(struct _reent *r, int fd, const void *ptr, size_t len)
-{
-    return -1;
-}
-
 void system_setup(void)
 {
     //
