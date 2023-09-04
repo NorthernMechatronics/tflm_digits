@@ -29,16 +29,12 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _OTA_CONFIG_H_
-#define _OTA_CONFIG_H_
+#ifndef _BUTTON_H_
+#define _BUTTON_H_
 
-/*
- * 1. Define flash address to store the OTA image
- * 2. Specify the maximum image size
- */
+typedef void (*sequence_callback_t)(void);
 
-#define OTA_FLASH_ADDRESS      0x00082000  // second flash bank
-#define OTA_FLASH_MAX_SIZE     0x0007E000
-#define OTA_POINTER_LOCATION   0x00080000
+void button_sequence_register(uint8_t size, uint32_t value, sequence_callback_t cb);
+void button_sequence_unregister(uint8_t size, uint32_t value, sequence_callback_t cb);
 
 #endif

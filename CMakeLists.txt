@@ -23,11 +23,14 @@ target_link_libraries(
     PUBLIC
         -T${TARGET_LINK_SCRIPT}
         -Wl,--start-group
+        -L${CMSIS_LIB_DIR}
         -lstdc++
         -lsupc++
         -lm
         -lc
         -lgcc
+        -lCMSISDSP
+        -lcmsis-nn
         -Wl,--end-group
         -Wl,--gc-sections
 )
@@ -65,19 +68,24 @@ target_sources(
     main.c
     application_task_cli.c
     application_task.c
+    button_task.c
     camera_task.c
     camera_task_cli.c
     console_task.c
+    stub.c
 
     drivers/arducam/ArducamAmbiqHAL.c
     drivers/arducam/ArducamCamera.c
     drivers/arducam/ArducamLink.c
     drivers/arducam/ArducamUart.c
 
-#    constants.cc
-#    model.cc
-#    output_handler.cc
-#    tflm.cc
+    constants.cc
+    model_settings.cc
+    model.cc
+    quant_model_medium.cc
+    quant_model_small.cc
+    output_handler.cc
+    tflm.cc
 
     utils/RTT/RTT/SEGGER_RTT.c
     utils/RTT/RTT/SEGGER_RTT_printf.c

@@ -203,7 +203,7 @@ pin
     func_sel        = AM_HAL_PIN_16_GPIO
     drvstrength     = 2
     GPinput         = true
-    intdir          = lo2hi
+    intdir          = hi2lo
 
 pin
     name            = BUTTON1
@@ -212,7 +212,7 @@ pin
     func_sel        = AM_HAL_PIN_18_GPIO
     drvstrength     = 2
     GPinput         = true
-    intdir          = lo2hi
+    intdir          = hi2lo
 
 pin
     name            = BUTTON2
@@ -221,7 +221,7 @@ pin
     func_sel        = AM_HAL_PIN_19_GPIO
     drvstrength     = 2
     GPinput         = true
-    intdir          = lo2hi
+    intdir          = hi2lo
 
 pin
     name            = LED0

@@ -1,4 +1,3 @@
 [submodule "nmsdk2"]
 	path = nmsdk2
 	url = git@github.com:NorthernMechatronics/nmsdk2.git
-	branch = master

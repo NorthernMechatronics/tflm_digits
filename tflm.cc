@@ -29,20 +29,22 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/system_setup.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
-#include "constants.h"
-#include "model.h"
-#include "output_handler.h"
+#include "model_settings.h"
+#include "quant_model_medium.h"
 
 #include "tflm.h"
 
 namespace
 {
+// Declare all of the necessary variables: error_reporter, model, interpreter,
+// input and output tensors.
 tflite::ErrorReporter *error_reporter = nullptr;
 const tflite::Model *model = nullptr;
 tflite::MicroInterpreter *interpreter = nullptr;
@@ -50,17 +52,23 @@ TfLiteTensor *input = nullptr;
 TfLiteTensor *output = nullptr;
 int inference_count = 0;
 
-constexpr int kTensorArenaSize = 2000;
-uint8_t tensor_arena[kTensorArenaSize];
+// Set the size of the tensor arena - the tensor arena will vary depending on
+// the model, but the arena size should be slightly above the minimum required
+// to reduce the amount of memory allocated.
+// There will be an error if the tensor arena size is too small.
+constexpr int kTensorArenaSize = 100 * 1024;
+alignas(16) uint8_t tensor_arena[kTensorArenaSize];
 } // namespace
 
-void tflm_setup()
-{
+void tflm_setup() {
     tflite::InitializeTarget();
-    static tflite::MicroErrorReporter micro_error_reporter;
 
+    // Declare the error_reporter.
+    static tflite::MicroErrorReporter micro_error_reporter;
     error_reporter = &micro_error_reporter;
-    model = tflite::GetModel(g_model);
+
+    // Load in the model.
+    model = tflite::GetModel(quant_model_medium);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         TF_LITE_REPORT_ERROR(error_reporter,
@@ -68,8 +76,13 @@ void tflm_setup()
                              "to supported version %d.",
                              model->version(),
                              TFLITE_SCHEMA_VERSION);
+        return;
     }
 
+    // Resolvers load in operations into the interpreter
+    // that are used within the model. Typically, you will explicitly declare the layers
+    // you use in the model. If you don't already know
+    // the layers, you can use AllOpsResolver, with some codespace penalty.
     static tflite::AllOpsResolver resolver;
 
     // Build an interpreter to run the model with.
@@ -81,52 +94,126 @@ void tflm_setup()
     TfLiteStatus allocate_status = interpreter->AllocateTensors();
     if (allocate_status != kTfLiteOk)
     {
-        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
+        TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed.");
         return;
     }
 
     // Obtain pointers to the model's input and output tensors.
     input = interpreter->input(0);
-    output = interpreter->output(0);
 
-    // Keep track of how many inferences we have performed.
-    inference_count = 0;
-}
-
-void tflm_loop()
-{
-    // Calculate an x value to feed into the model. We compare the current
-    // inference_count to the number of inferences per cycle to determine
-    // our position within the range of possible x values the model was
-    // trained on, and use this to calculate a value.
-    float position = static_cast<float>(inference_count) / static_cast<float>(kInferencesPerCycle);
-    float x = position * kXrange;
-
-    // Quantize the input from floating-point to integer
-    int8_t x_quantized = x / input->params.scale + input->params.zero_point;
-    // Place the quantized input in the model's input tensor
-    input->data.int8[0] = x_quantized;
-
-    // Run inference, and report any error
-    TfLiteStatus invoke_status = interpreter->Invoke();
-    if (invoke_status != kTfLiteOk)
+    // Check the settings match the model you have
+    if (kNumRows != input->dims->data[1]) 
     {
-        TF_LITE_REPORT_ERROR(error_reporter, "Invoke failed on x: %f\n", static_cast<double>(x));
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of rows expected: %d\nNumber of input rows given: %d", kNumRows, input->dims->data[1]);
         return;
     }
 
-    // Obtain the quantized output from model's output tensor
-    int8_t y_quantized = output->data.int8[0];
-    // Dequantize the output from integer to floating-point
-    float y = (y_quantized - output->params.zero_point) * output->params.scale;
+    if (kNumCols != input->dims->data[2]) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of columns expected: %d\nNumber of input columns given: %d", kNumCols, input->dims->data[2]);
+        return;
+    }
 
-    // Output the results. A custom HandleOutput function can be implemented
-    // for each supported hardware target.
-    HandleOutput(error_reporter, x, y);
+    if (kNumChannels != input->dims->data[3]) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of channels expected: %d\nNumber of input columns given :%d", kNumChannels, input->dims->data[3]);
+        return;
+    }
 
-    // Increment the inference_counter, and reset it if we have reached
-    // the total number per cycle
-    inference_count += 1;
-    if (inference_count >= kInferencesPerCycle)
-        inference_count = 0;
+    if (kTfLiteInt8 != input->type) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "The input type is not int8.");
+        return;
+    }
+
+    // Reset the inferences count every time you start the project.
+    inference_count = 0;
+
+    TF_LITE_REPORT_ERROR(error_reporter, "Completed setup");
+}
+
+// Produce prediction results based on the inferences from the model.
+void prediction_results(int8_t *out, size_t *outlen) 
+{
+    // Resize the scores to from [-128, 127], to [0, 255] for better readability.
+    const int RESIZE_CONSTANT = 128;
+    int max_score = 0, max_index = 0;
+    for (int i = 0; i < *outlen; ++i) 
+    {
+        int curr_score = out[i] + RESIZE_CONSTANT;
+        if (max_score <= curr_score) 
+        {
+            max_index = i;
+            max_score = curr_score;
+        }
+    }
+
+    // Show predicted digits and raw categories. The output tensor format is dependent on
+    // the model itself, so you must verify before running on the microcontroller.
+    TF_LITE_REPORT_ERROR(error_reporter, "Predicted digit: %c\nScore: %d", kCategoryLabels[max_index], max_score);
+    TF_LITE_REPORT_ERROR(error_reporter, "Raw categories: [%c %c %c %c %c %c %c %c %c %c]", 
+        kCategoryLabels[kZeroIndex], kCategoryLabels[kOneIndex], kCategoryLabels[kTwoIndex], kCategoryLabels[kThreeIndex],
+        kCategoryLabels[kFourIndex], kCategoryLabels[kFiveIndex], kCategoryLabels[kSixIndex], kCategoryLabels[kSevenIndex],
+        kCategoryLabels[kEightIndex], kCategoryLabels[kNineIndex]);
+    TF_LITE_REPORT_ERROR(error_reporter, "Raw scores: \t[%d %d %d %d %d %d %d %d %d %d]", 
+        out[kZeroIndex] + RESIZE_CONSTANT, out[kOneIndex] + RESIZE_CONSTANT, out[kTwoIndex] + RESIZE_CONSTANT, out[kThreeIndex] + RESIZE_CONSTANT, 
+        out[kFourIndex] + RESIZE_CONSTANT, out[kFiveIndex] + RESIZE_CONSTANT, out[kSixIndex] + RESIZE_CONSTANT, out[kSevenIndex] + RESIZE_CONSTANT, 
+        out[kEightIndex] + RESIZE_CONSTANT, out[kNineIndex] + RESIZE_CONSTANT);
+}
+
+void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
+{
+    // Check that the number of bytes coming from the camera is the same going into the model.
+    if (inlen != input->bytes) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "The outgoing number of bytes from camera does not match incoming number of bytes in input tensor.");
+        return;
+    }
+
+    // Copy the input from the camera into the input buffer of the model.
+    memcpy(input->data.int8, in, inlen);
+
+    // Invoke the interpreter.
+    TfLiteStatus invoke_status = interpreter->Invoke();
+    if (invoke_status != kTfLiteOk) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "Interpreter invoke failed.\n");
+        return;
+    }
+
+    TF_LITE_REPORT_ERROR(error_reporter, "Completed inference %d\n", inference_count);
+
+    output = interpreter->output(0);
+
+    // Grab the output tensor and type cast it to int8_t.
+    out = tflite::GetTensorData<int8_t>(output);
+    *outlen = output->dims->data[1];
+
+    if (output->dims->size != 2) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "Shape of the output tensor is incorrect.");
+        return;
+    }
+
+    if (output->dims->data[0] != 1) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "More than one output tensor is being outputted.");
+        return;
+    }
+
+    if (*outlen != kCategoryCount) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "Number of categories in output tensor: %d\nNumber of categories expected: %d", outlen, kCategoryCount);
+        return;
+    }
+
+    if (output->type != kTfLiteInt8) 
+    {
+        TF_LITE_REPORT_ERROR(error_reporter, "Output type is not int8.");
+        return;
+    }
+
+    prediction_results(out, outlen);
+
+    inference_count++;
 }

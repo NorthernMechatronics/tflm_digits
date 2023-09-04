@@ -41,7 +41,7 @@ typedef enum camera_command_e {
     CAMERA_COMMAND_STILL_CAPTURE,
     CAMERA_COMMAND_STILL_RETRIEVE,
     CAMERA_COMMAND_STILL_RETRIEVE_DONE,
-    CAMERA_COMMAND_NONE
+    CAMERA_COMMAND_MAXLEN
 } camera_command_t;
 
 typedef struct camera_capture_parameters_s
@@ -62,7 +62,10 @@ typedef struct camera_message_s
     camera_message_payload_t payload;
 } camera_message_t;
 
+typedef void (*camera_event_handler_t)(uint8_t *, size_t size);
+
 extern void camera_task_create(uint32_t priority);
 extern void camera_task_send(camera_message_t *message);
+extern void camera_event_subscribe(camera_command_t event, camera_event_handler_t handler);
 
 #endif
