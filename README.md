@@ -2,7 +2,7 @@
 
 This example shows how to run [Tensorflow Lite for Microcontrollers (TFLM)](https://www.tensorflow.org/lite/microcontrollers) to take a picture from a camera, and run inferences on neural networks with varying sizes. The goal is to detect a single digit from a given image.
 
-Watch on youtube: https://www.youtube.com/watch?v=7_iKuFofMpM
+Watch on youtube: https://youtu.be/s95ANzzGLiE
 
 ## Table of Contents
 
