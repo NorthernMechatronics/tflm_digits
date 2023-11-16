@@ -135,7 +135,6 @@ target_sources(
 
     constants.cc
     model_settings.cc
-    model.cc
     ${MODEL_SRC}
     output_handler.cc
     tflm.cc
