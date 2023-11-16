@@ -41,6 +41,8 @@
 
 #include <am_bsp.h>
 
+#include "ArducamCamera.h"
+
 #include "tflm.h"
 
 #include "button.h"
@@ -147,7 +149,7 @@ static void application_setup_task()
     application_burst_init();
     tflm_setup();
 
-    button_sequence_register(2, 0B00, application_button_handler);
+    button_sequence_register(1, 0B0, application_button_handler);
     camera_event_subscribe(CAMERA_COMMAND_STILL_RETRIEVE_DONE, application_camera_handler);
 
     xTimerStart(application_timer_handle, portMAX_DELAY);
@@ -167,6 +169,12 @@ static void application_task(void *parameter)
             {
             case APPLICATION_COMMAND_CAPTURE_START:
                 am_util_stdio_printf("Capture Start Triggered\r\n");
+
+                camera_message_t message;
+                message.command = CAMERA_COMMAND_STILL_CAPTURE;
+                message.payload.capture_parameters.resolution = CAM_IMAGE_MODE_96X96;
+                message.payload.capture_parameters.format = CAM_IMAGE_PIX_FMT_RGB565;
+                camera_task_send(&message);
                 break;
 
             case APPLICATION_COMMAND_CAPTURE_DONE:
