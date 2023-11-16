@@ -109,6 +109,7 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/bsp/${BSP_TARGET_DIR}
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/config
+    ${PROJECT_SOURCE_DIR}/tensorflow
     ${PROJECT_SOURCE_DIR}/utils/RTT/Config
     ${PROJECT_SOURCE_DIR}/utils/RTT/RTT
 
@@ -133,11 +134,11 @@ target_sources(
     drivers/arducam/ArducamLink.c
     drivers/arducam/ArducamUart.c
 
-    constants.cc
-    model_settings.cc
-    ${MODEL_SRC}
-    output_handler.cc
-    tflm.cc
+    tensorflow/constants.cc
+    tensorflow/model_settings.cc
+    tensorflow/${MODEL_SRC}
+    tensorflow/output_handler.cc
+    tensorflow/tflm.cc
 
     utils/RTT/RTT/SEGGER_RTT.c
     utils/RTT/RTT/SEGGER_RTT_printf.c
