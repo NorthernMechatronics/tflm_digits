@@ -152,17 +152,6 @@ void prediction_results(int8_t *out, size_t *outlen)
     // the model itself, so you must verify before running on the microcontroller.
     TF_LITE_REPORT_ERROR(error_reporter, "Predicted digit: %c\nScore: %d", kCategoryLabels[max_index], max_score);
 
-    /*
-    TF_LITE_REPORT_ERROR(error_reporter, "Raw categories: [%c %c %c %c %c %c %c %c %c %c]", 
-        kCategoryLabels[kZeroIndex], kCategoryLabels[kOneIndex], kCategoryLabels[kTwoIndex], kCategoryLabels[kThreeIndex],
-        kCategoryLabels[kFourIndex], kCategoryLabels[kFiveIndex], kCategoryLabels[kSixIndex], kCategoryLabels[kSevenIndex],
-        kCategoryLabels[kEightIndex], kCategoryLabels[kNineIndex]);
-    TF_LITE_REPORT_ERROR(error_reporter, "Raw scores: \t[%d %d %d %d %d %d %d %d %d %d]", 
-        out[kZeroIndex] + RESIZE_CONSTANT, out[kOneIndex] + RESIZE_CONSTANT, out[kTwoIndex] + RESIZE_CONSTANT, out[kThreeIndex] + RESIZE_CONSTANT, 
-        out[kFourIndex] + RESIZE_CONSTANT, out[kFiveIndex] + RESIZE_CONSTANT, out[kSixIndex] + RESIZE_CONSTANT, out[kSevenIndex] + RESIZE_CONSTANT, 
-        out[kEightIndex] + RESIZE_CONSTANT, out[kNineIndex] + RESIZE_CONSTANT);
-    */
-
     TF_LITE_REPORT_ERROR(error_reporter, "\x01\x01{");
     for (int i = 0; i < kCategoryCount; i++)
     {
@@ -175,7 +164,8 @@ void prediction_results(int8_t *out, size_t *outlen)
             TF_LITE_REPORT_ERROR(error_reporter, "    { \"%c\": %d }", kCategoryLabels[i], out[i] + RESIZE_CONSTANT);
         }
     }
-    TF_LITE_REPORT_ERROR(error_reporter, "}\x02\x02");
+    TF_LITE_REPORT_ERROR(error_reporter, "}");
+    TF_LITE_REPORT_ERROR(error_reporter, "\x02\x02");
 }
 
 void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
