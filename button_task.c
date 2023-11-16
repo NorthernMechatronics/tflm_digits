@@ -219,6 +219,7 @@ void button_task_create(uint32_t priority)
     am_hal_gpio_interrupt_register(AM_BSP_GPIO_BUTTON0, button_press_handler);
     am_hal_gpio_interrupt_clear(AM_HAL_GPIO_BIT(AM_BSP_GPIO_BUTTON0));
     am_hal_gpio_interrupt_enable(AM_HAL_GPIO_BIT(AM_BSP_GPIO_BUTTON0));
+    NVIC_EnableIRQ(GPIO_IRQn);
  
     xTaskCreate(button_task, "Button Task", 512, 0, priority, &button_task_handle);
     button_queue_handle = xQueueCreate(16, sizeof(button_command_e));
