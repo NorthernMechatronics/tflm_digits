@@ -36,10 +36,6 @@
 
 #include <am_bsp.h>
 
-#include <FreeRTOS.h>
-#include <stream_buffer.h>
-#include <task.h>
-
 void *camera_iom_handle;
 
 void camera_delay_ms(uint32_t delay)
@@ -53,6 +49,19 @@ void camera_wake()
     config.eInterfaceMode = AM_HAL_IOM_SPI_MODE;
     config.ui32ClockFreq = AM_HAL_IOM_1MHZ;
     config.eSpiMode = AM_HAL_IOM_SPI_MODE_0;
+
+// FIXME:
+//
+// On the Petal development board, the entire I/Os can be
+// powered on and off for power savings and current draw 
+// measurement.  In the development version, we need to
+// explicitly enable the I/O header pins.  This will be
+// resolved in the production version where it will default
+// to enable.
+#if defined(BSP_NM180410)
+    am_hal_gpio_pinconfig(30, g_AM_HAL_GPIO_OUTPUT);
+    am_hal_gpio_state_write(30, AM_HAL_GPIO_OUTPUT_SET);
+#endif
 
     am_bsp_iom_pins_enable(0, AM_HAL_IOM_SPI_MODE);
     am_hal_iom_initialize(0, &camera_iom_handle);
