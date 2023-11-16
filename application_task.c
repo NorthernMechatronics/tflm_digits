@@ -179,7 +179,10 @@ static void application_task(void *parameter)
 
             case APPLICATION_COMMAND_CAPTURE_DONE:
                 am_util_stdio_printf("Capture Done\r\n");
+                am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_CLEAR);
+                am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_SET);
                 application_inference();
+                am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_CLEAR);
                 break;
 
             case APPLICATION_COMMAND_HEARTBEAT:
