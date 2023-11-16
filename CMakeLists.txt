@@ -15,9 +15,13 @@ option(BSP_NM180100EVB "" OFF)
 option(BSP_NM180310 "" OFF)
 option(BSP_NM180410 "" OFF)
 
-option(RAT_BLE_ENABLE "" ON)
-option(RAT_LORAWAN_ENABLE "" ON)
+option(RAT_BLE_ENABLE "" OFF)
+option(RAT_LORAWAN_ENABLE "" OFF)
 option(TF_ENABLE "" OFF)
+
+option(MODEL_SIZE_SMALL "" OFF)
+option(MODEL_SIZE_MEDIUM "" OFF)
+option(MODEL_SIZE_LARGE "" OFF)
 
 if (BSP_NM180100EVB)
 add_definitions(-DBSP_NM180100EVB)
@@ -32,6 +36,21 @@ endif()
 if (BSP_NM180410)
 add_definitions(-DBSP_NM180410)
 set(BSP_TARGET_DIR nm180410 CACHE STRING "" FORCE)
+endif()
+
+if (MODEL_SIZE_SMALL)
+    add_definitions(-DMODEL_SIZE_SMALL)
+    set(MODEL_SRC quant_model_small.cc CACHE STRING "" FORCE)
+endif()
+
+if (MODEL_SIZE_MEDIUM)
+    add_definitions(-DMODEL_SIZE_MEDIUM)
+    set(MODEL_SRC quant_model_medium.cc CACHE STRING "" FORCE)
+endif()
+
+if (MODEL_SIZE_LARGE)
+    add_definitions(-DMODEL_SIZE_LARGE)
+    set(MODEL_SRC quant_model_large.cc CACHE STRING "" FORCE)
 endif()
 
 add_subdirectory(nmsdk2)
@@ -117,8 +136,7 @@ target_sources(
     constants.cc
     model_settings.cc
     model.cc
-    quant_model_medium.cc
-    quant_model_small.cc
+    ${MODEL_SRC}
     output_handler.cc
     tflm.cc
 

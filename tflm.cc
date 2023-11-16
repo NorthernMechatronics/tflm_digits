@@ -37,7 +37,7 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 
 #include "model_settings.h"
-#include "quant_model_medium.h"
+#include "quant_model.h"
 
 #include "tflm.h"
 
@@ -68,7 +68,7 @@ void tflm_setup() {
     error_reporter = &micro_error_reporter;
 
     // Load in the model.
-    model = tflite::GetModel(quant_model_medium);
+    model = tflite::GetModel(QUANT_MODEL);
     if (model->version() != TFLITE_SCHEMA_VERSION)
     {
         TF_LITE_REPORT_ERROR(error_reporter,
