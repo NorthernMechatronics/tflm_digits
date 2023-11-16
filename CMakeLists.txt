@@ -3,14 +3,49 @@ cmake_minimum_required(VERSION 3.13.0)
 
 get_filename_component(APPLICATION ${CMAKE_CURRENT_SOURCE_DIR} NAME_WE)
 
+if (NOT "$ENV{APPLICATION_NAME}" STREQUAL "")
+    set(APPLICATION_NAME $ENV{APPLICATION_NAME})
+else()
+    set(APPLICATION_NAME ${APPLICATION})
+endif()
+
 set(TARGET "nm180100" CACHE STRING "" FORCE)
-set(BSP_TARGET nm180100evb CACHE STRING "" FORCE)
+
+option(BSP_NM180100EVB "" OFF)
+option(BSP_NM180310 "" OFF)
+option(BSP_NM180410 "" OFF)
+
+option(RAT_BLE_ENABLE "" ON)
+option(RAT_LORAWAN_ENABLE "" ON)
+option(TF_ENABLE "" OFF)
+
+if (BSP_NM180100EVB)
+add_definitions(-DBSP_NM180100EVB)
+set(BSP_TARGET_DIR nm180100evb CACHE STRING "" FORCE)
+endif()
+
+if (BSP_NM180310)
+add_definitions(-DBSP_NM180310)
+set(BSP_TARGET_DIR nm180310 CACHE STRING "" FORCE)
+endif()
+
+if (BSP_NM180410)
+add_definitions(-DBSP_NM180410)
+set(BSP_TARGET_DIR nm180410 CACHE STRING "" FORCE)
+endif()
 
 add_subdirectory(nmsdk2)
 
 project(${APPLICATION})
 
 add_executable(${APPLICATION})
+set_target_properties(
+    ${APPLICATION}
+    PROPERTIES
+        OUTPUT_NAME ${APPLICATION_NAME}
+        SUFFIX ".axf"
+)
+
 add_subdirectory(bsp)
 
 target_link_libraries(
@@ -52,7 +87,7 @@ target_include_directories(
     ${TFLM_INCLUDES}
 
     ${PROJECT_SOURCE_DIR}/bsp
-    ${PROJECT_SOURCE_DIR}/bsp/${BSP_TARGET}
+    ${PROJECT_SOURCE_DIR}/bsp/${BSP_TARGET_DIR}
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/config
     ${PROJECT_SOURCE_DIR}/utils/RTT/Config

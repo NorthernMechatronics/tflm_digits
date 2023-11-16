@@ -1,8 +1,9 @@
 {
     "cmake.configureEnvironment": {
-        "APPLICATION": "${workspaceFolderBasename}"
+        "APPLICATION": "${workspaceFolderBasename}",
+        "APPLICATION_NAME": "${workspaceFolderBasename}_${variant:bsp}_${buildType}",
     },
-    "cmake.buildDirectory": "${workspaceFolder}/build/${buildType}",
+    "cmake.buildDirectory": "${workspaceFolder}/build/${variant:bsp}_${buildType}",
     "cmake.buildTask": true,
     "cmake.setBuildTypeOnMultiConfig": true,
     "cmake.configureOnOpen": false,
