@@ -157,11 +157,11 @@ void prediction_results(int8_t *out, size_t *outlen)
     {
         if (i < (kCategoryCount - 1))
         {
-            TF_LITE_REPORT_ERROR(error_reporter, "    { \"%c\": %d },", kCategoryLabels[i], out[i] + RESIZE_CONSTANT);
+            TF_LITE_REPORT_ERROR(error_reporter, "    \"%c\": %d,", kCategoryLabels[i], out[i] + RESIZE_CONSTANT);
         }
         else
         {
-            TF_LITE_REPORT_ERROR(error_reporter, "    { \"%c\": %d }", kCategoryLabels[i], out[i] + RESIZE_CONSTANT);
+            TF_LITE_REPORT_ERROR(error_reporter, "    \"%c\": %d", kCategoryLabels[i], out[i] + RESIZE_CONSTANT);
         }
     }
     TF_LITE_REPORT_ERROR(error_reporter, "}");
