@@ -1,0 +1,8 @@
+numpy
+pathlib
+keras
+tensorflow
+tensorflow_datasets==4.9.2
+matplotlib
+scipy
+scikit-learn
