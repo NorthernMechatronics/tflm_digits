@@ -29,6 +29,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <FreeRTOS.h>
+#include <task.h>
 
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
@@ -181,7 +183,12 @@ void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
     memcpy(input->data.int8, in, inlen);
 
     // Invoke the interpreter.
+    uint32_t start = xTaskGetTickCount();
     TfLiteStatus invoke_status = interpreter->Invoke();
+    uint32_t stop = xTaskGetTickCount();
+    uint32_t inference_ticks = (stop - start);
+    TF_LITE_REPORT_ERROR(error_reporter, "Inference ticks: %d.\n", inference_ticks);
+
     if (invoke_status != kTfLiteOk) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "Interpreter invoke failed.\n");
