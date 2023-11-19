@@ -38,7 +38,7 @@ extern "C"
 #endif
 
 extern void tflm_setup(void);
-extern void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen);
+extern uint32_t tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen);
 
 #ifdef __cplusplus
 }

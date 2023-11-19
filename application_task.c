@@ -61,6 +61,8 @@ static am_hal_burst_mode_e  application_burst_mode;
 static uint8_t *image_buffer;
 static size_t image_size;
 
+static uint32_t application_leds[4] = { AM_BSP_GPIO_LED1, AM_BSP_GPIO_LED2, AM_BSP_GPIO_LED3, AM_BSP_GPIO_LED4 };
+
 typedef enum application_command_e
 {
     APPLICATION_COMMAND_CAPTURE_START,
@@ -119,13 +121,31 @@ static void application_burst_disable()
     }
 }
 
+static void application_set_led(uint32_t value)
+{
+    for (uint32_t i = 0; i < 4; i++)
+    {
+        if (value & 0x01)
+        {
+            am_hal_gpio_state_write(application_leds[i], AM_HAL_GPIO_OUTPUT_SET);
+        }
+        else
+        {
+            am_hal_gpio_state_write(application_leds[i], AM_HAL_GPIO_OUTPUT_CLEAR);
+        }
+        value >>= 1;
+    }
+}
+
 static void application_inference()
 {
+    uint32_t value;
     uint8_t *result;
     size_t result_size;
     application_burst_enable();
-    tflm_inference(image_buffer, image_size, result, &result_size);
+    value = tflm_inference(image_buffer, image_size, result, &result_size);
     application_burst_disable();
+    application_set_led(value);
     am_util_stdio_printf("Inference Done\r\n");
 }
 
@@ -179,10 +199,11 @@ static void application_task(void *parameter)
 
             case APPLICATION_COMMAND_CAPTURE_DONE:
                 am_util_stdio_printf("Capture Done\r\n");
-                am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_CLEAR);
-                am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_SET);
+                xTimerStop(application_timer_handle, portMAX_DELAY);
+                am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_SET);
                 application_inference();
-                am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_CLEAR);
+                am_hal_gpio_state_write(AM_BSP_GPIO_LED0, AM_HAL_GPIO_OUTPUT_CLEAR);
+                xTimerStart(application_timer_handle, portMAX_DELAY);
                 break;
 
             case APPLICATION_COMMAND_HEARTBEAT:

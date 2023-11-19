@@ -135,8 +135,10 @@ void tflm_setup() {
 }
 
 // Produce prediction results based on the inferences from the model.
-void prediction_results(int8_t *out, size_t *outlen) 
+uint32_t prediction_results(int8_t *out, size_t *outlen) 
 {
+    uint32_t predicted_value = 0xF;
+
     // Resize the scores to from [-128, 127], to [0, 255] for better readability.
     const int RESIZE_CONSTANT = 128;
     int max_score = 0, max_index = 0;
@@ -153,6 +155,7 @@ void prediction_results(int8_t *out, size_t *outlen)
     // Show predicted digits and raw categories. The output tensor format is dependent on
     // the model itself, so you must verify before running on the microcontroller.
     TF_LITE_REPORT_ERROR(error_reporter, "Predicted digit: %c\nScore: %d", kCategoryLabels[max_index], max_score);
+    predicted_value = kCategoryLabels[max_index] - '0';
 
     TF_LITE_REPORT_ERROR(error_reporter, "\x01\x01{");
     for (int i = 0; i < kCategoryCount; i++)
@@ -168,15 +171,18 @@ void prediction_results(int8_t *out, size_t *outlen)
     }
     TF_LITE_REPORT_ERROR(error_reporter, "}");
     TF_LITE_REPORT_ERROR(error_reporter, "\x02\x02");
+
+    return predicted_value;
 }
 
-void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
+uint32_t tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
 {
+    uint32_t predicted_value = 0xF;
     // Check that the number of bytes coming from the camera is the same going into the model.
     if (inlen != input->bytes) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "The outgoing number of bytes from camera does not match incoming number of bytes in input tensor.");
-        return;
+        return predicted_value;
     }
 
     // Copy the input from the camera into the input buffer of the model.
@@ -192,7 +198,7 @@ void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
     if (invoke_status != kTfLiteOk) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "Interpreter invoke failed.\n");
-        return;
+        return predicted_value;
     }
 
     TF_LITE_REPORT_ERROR(error_reporter, "Completed inference %d\n", inference_count);
@@ -206,28 +212,30 @@ void tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
     if (output->dims->size != 2) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "Shape of the output tensor is incorrect.");
-        return;
+        return predicted_value;
     }
 
     if (output->dims->data[0] != 1) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "More than one output tensor is being outputted.");
-        return;
+        return predicted_value;
     }
 
     if (*outlen != kCategoryCount) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "Number of categories in output tensor: %d\nNumber of categories expected: %d", outlen, kCategoryCount);
-        return;
+        return predicted_value;
     }
 
     if (output->type != kTfLiteInt8) 
     {
         TF_LITE_REPORT_ERROR(error_reporter, "Output type is not int8.");
-        return;
+        return predicted_value;
     }
 
-    prediction_results(out, outlen);
+    predicted_value = prediction_results(out, outlen);
 
     inference_count++;
+
+    return predicted_value;
 }
