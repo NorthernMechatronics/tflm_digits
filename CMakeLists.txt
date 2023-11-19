@@ -22,6 +22,7 @@ option(TF_ENABLE "" OFF)
 option(MODEL_SIZE_SMALL "" OFF)
 option(MODEL_SIZE_MEDIUM "" OFF)
 option(MODEL_SIZE_LARGE "" OFF)
+option(MODEL_OPT "" OFF)
 
 if (BSP_NM180100EVB)
 add_definitions(-DBSP_NM180100EVB)
@@ -52,6 +53,12 @@ if (MODEL_SIZE_LARGE)
     add_definitions(-DMODEL_SIZE_LARGE)
     set(MODEL_SRC quant_model_large.cc CACHE STRING "" FORCE)
 endif()
+
+if (MODEL_OPT)
+    add_definitions(-DMODEL_OPT)
+    set(MODEL_SRC quant_model_opt.cc CACHE STRING "" FORCE)
+endif()
+
 
 add_subdirectory(nmsdk2)
 

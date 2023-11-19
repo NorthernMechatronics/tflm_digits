@@ -12,7 +12,7 @@
         "-DRAT_LORAWAN_ENABLE=OFF",
         "-DRAT_BLE_ENABLE=OFF",
         "-DTF_ENABLE=ON",
-        "-DMODEL_SIZE_SMALL=ON"
+        "-DMODEL_OPT=ON"
     ],
     "cmake.generator": "Unix Makefiles"
 }

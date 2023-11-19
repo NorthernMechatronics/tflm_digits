@@ -24,6 +24,20 @@ constexpr int kNumChannels = 3;
 
 constexpr int kMaxImageSize = kNumCols * kNumRows * kNumChannels;
 
+#if defined(MODEL_OPT)
+constexpr int kCategoryCount = 10;
+constexpr int kOneIndex = 1;
+constexpr int kTwoIndex = 2;
+constexpr int kThreeIndex = 3;
+constexpr int kFourIndex = 4;
+constexpr int kFiveIndex = 5;
+constexpr int kSixIndex = 6;
+constexpr int kSevenIndex = 7;
+constexpr int kEightIndex = 8;
+constexpr int kNineIndex = 9;
+constexpr int kZeroIndex = 0;
+extern const char kCategoryLabels[kCategoryCount];
+#else
 constexpr int kCategoryCount = 10;
 constexpr int kOneIndex = 0;
 constexpr int kTwoIndex = 1;
@@ -36,5 +50,6 @@ constexpr int kEightIndex = 7;
 constexpr int kNineIndex = 8;
 constexpr int kZeroIndex = 9;
 extern const char kCategoryLabels[kCategoryCount];
+#endif
 
 #endif // TENSORFLOW_LITE_MODEL_SETTINGS_H_

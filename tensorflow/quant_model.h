@@ -44,6 +44,10 @@
     #include "quant_model_large.h"
     #define QUANT_MODEL         quant_model_large
     #define QUANT_MODEL_LEN     quant_model_large_len
+#elif defined(MODEL_OPT)
+    #include "quant_model_opt.h"
+    #define QUANT_MODEL         quant_model_opt
+    #define QUANT_MODEL_LEN     quant_model_opt_len
 #else
     #error  "Model size not specified"
 #endif
