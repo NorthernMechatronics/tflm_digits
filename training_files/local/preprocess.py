@@ -104,7 +104,7 @@ def main():
 
     if args.randomised:
         train_images = rotate(train_images, (-20, 20))
-        test_images = rotate(test_images, (-20, 20))
+        val_images = rotate(val_images, (-20, 20))
 
     train_images = color_convert(train_images, input_color_channels, output_color_channels)
     val_images = color_convert(val_images, input_color_channels, output_color_channels)
