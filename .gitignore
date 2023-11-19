@@ -15,6 +15,8 @@ venv/
 *.bin
 *.lst
 *.map
+*.npy
+*.tflite
 lib/
 am_bsp_pins.c
 am_bsp_pins.h
