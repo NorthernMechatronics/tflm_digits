@@ -68,14 +68,11 @@ static TimerHandle_t camera_timer_handle;
 #define IMAGE_HEIGHT (32)
 #define IMAGE_CHANNEL (3)
 #define IMAGE_SIZE  (IMAGE_WIDTH * IMAGE_HEIGHT * IMAGE_CHANNEL)
-#define IMAGE_SIZE_GRAYSCALE  (IMAGE_WIDTH * IMAGE_HEIGHT)
 
 static uint8_t image_process_buffer[IMAGE_PROCESS_BLOCK_SIZE];
 static uint8_t image_rgb888[IMAGE_SIZE];
-static uint8_t image_grayscale[IMAGE_SIZE_GRAYSCALE];
 static uint8_t image_row_index, image_column_index;
 static uint32_t image_process_index = 0;
-static uint32_t grayscale_image_process_index = 0;
 static uint32_t image_capture_state = 0;
 
 typedef struct camera_event_callback_s
@@ -297,9 +294,6 @@ static void camera_retrieve_still(void)
                     {
                         b_max = b_raw;
                     }
-
-                    // float grayscale = 0.299 * r_raw + 0.587 * g_raw + 0.114 * b_raw;
-                    // image_grayscale[grayscale_image_process_index++] = g_raw;
                 }
             }
             else
@@ -332,12 +326,12 @@ static void camera_print_capture(void)
     {
         am_util_stdio_printf("0x%02x 0x%02x 0x%02x\r\n", image_rgb888[i], image_rgb888[i+1], image_rgb888[i+2]);
     }
-    am_util_stdio_printf("\r\n\r\n");
+     am_util_stdio_printf("\r\n\r\n");
 }
 
 static void camera_normalize()
 {
-    uint32_t r, g, b;
+    uint32_t r, g, b, gray;
     for (int i = 0; i < IMAGE_SIZE; i+=3)
     {
         r = image_rgb888[i] * 127 / r_max;
@@ -391,7 +385,6 @@ static void camera_task(void *parameter)
 
             case CAMERA_COMMAND_STILL_CAPTURE:
                 image_process_index = 0;
-                grayscale_image_process_index = 0;
                 image_row_index = 0;
                 image_column_index = 0;
                 takePicture(&camera,
@@ -419,7 +412,6 @@ static void camera_task(void *parameter)
             case CAMERA_COMMAND_STILL_RETRIEVE_DONE:
                 image_capture_state = 0;
                 camera_normalize();
-//                camera_print_capture();
                 if (camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler)
                 {
                     camera_event_callback[CAMERA_COMMAND_STILL_RETRIEVE_DONE].handler(image_rgb888, IMAGE_SIZE);
