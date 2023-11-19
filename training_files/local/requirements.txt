@@ -1,7 +1,7 @@
 numpy
 pathlib
 keras
-tensorflow
+tensorflow<2.11
 tensorflow_datasets==4.9.2
 matplotlib
 scipy
