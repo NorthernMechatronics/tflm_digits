@@ -135,7 +135,7 @@ void tflm_setup() {
 }
 
 // Produce prediction results based on the inferences from the model.
-uint32_t prediction_results(int8_t *out, size_t *outlen) 
+uint32_t prediction_results(int8_t *out, size_t *outlen, uint32_t time) 
 {
     uint32_t predicted_value = 0xF;
 
@@ -160,6 +160,7 @@ uint32_t prediction_results(int8_t *out, size_t *outlen)
     TF_LITE_REPORT_ERROR(error_reporter, "\x01\x01{");
     TF_LITE_REPORT_ERROR(error_reporter, "    \"result\": \"%c\",", kCategoryLabels[max_index]);
     TF_LITE_REPORT_ERROR(error_reporter, "    \"confidence\": %d,", max_score);
+    TF_LITE_REPORT_ERROR(error_reporter, "    \"time\": %d,", time);
     TF_LITE_REPORT_ERROR(error_reporter, "    \"details\":", max_score);
     for (int i = 0; i < kCategoryCount; i++)
     {
@@ -237,7 +238,7 @@ uint32_t tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
         return predicted_value;
     }
 
-    predicted_value = prediction_results(out, outlen);
+    predicted_value = prediction_results(out, outlen, inference_ticks);
 
     inference_count++;
 
