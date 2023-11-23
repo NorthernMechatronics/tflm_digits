@@ -161,7 +161,7 @@ uint32_t prediction_results(int8_t *out, size_t *outlen, uint32_t time)
     TF_LITE_REPORT_ERROR(error_reporter, "    \"result\": \"%c\",", kCategoryLabels[max_index]);
     TF_LITE_REPORT_ERROR(error_reporter, "    \"confidence\": %d,", max_score);
     TF_LITE_REPORT_ERROR(error_reporter, "    \"time\": %d,", time);
-    TF_LITE_REPORT_ERROR(error_reporter, "    \"details\":", max_score);
+    TF_LITE_REPORT_ERROR(error_reporter, "    \"details\": {", max_score);
     for (int i = 0; i < kCategoryCount; i++)
     {
         if (i < (kCategoryCount - 1))
