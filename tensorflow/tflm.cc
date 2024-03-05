@@ -131,7 +131,7 @@ void tflm_setup() {
     // Reset the inferences count every time you start the project.
     inference_count = 0;
 
-    TF_LITE_REPORT_ERROR(error_reporter, "Completed setup");
+    TF_LITE_REPORT_ERROR(error_reporter, "\n\rCompleted setup\n\r");
 }
 
 // Produce prediction results based on the inferences from the model.

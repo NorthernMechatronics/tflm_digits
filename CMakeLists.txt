@@ -76,15 +76,15 @@ add_subdirectory(bsp)
 
 target_link_libraries(
     ${APPLICATION}
-    PRIVATE
-        rtos
-        bsp
-        hal
-        tflm
     PUBLIC
         -T${TARGET_LINK_SCRIPT}
         -Wl,--start-group
         -L${CMSIS_LIB_DIR}
+        tflm
+        ble
+        rtos
+        bsp
+        hal
         -lstdc++
         -lsupc++
         -lm
@@ -121,6 +121,15 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/utils/RTT/RTT
 
     ${PROJECT_SOURCE_DIR}/drivers/arducam
+    
+    ${BLE_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/comms/ble
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/ble_app
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/bas
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/dis
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc
 )
 
 target_sources(
@@ -149,6 +158,17 @@ target_sources(
 
     utils/RTT/RTT/SEGGER_RTT.c
     utils/RTT/RTT/SEGGER_RTT_printf.c
+
+    ${PROJECT_SOURCE_DIR}/comms/ble/ble_stack.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ble_task.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ble_task_cli.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/ble_app/ble_app_main.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/bas/bas_main.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/dis/dis_main.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc/svc_batt.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc/svc_dis.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc/svc_ocr.c
 )
 
 add_custom_command(

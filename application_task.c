@@ -47,6 +47,7 @@
 
 #include "button.h"
 #include "camera_task.h"
+#include "ble.h"
 
 #include "application_task.h"
 #include "application_task_cli.h"
@@ -167,6 +168,7 @@ static void application_setup_task()
     am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
 
     application_burst_init();
+    ble_stack_state_set(BLE_STACK_STARTED);
     tflm_setup();
 
     button_sequence_register(1, 0B0, application_button_handler);
