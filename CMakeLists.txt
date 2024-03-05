@@ -129,6 +129,7 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/bas
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/dis
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/ocr
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc
 )
 
@@ -166,6 +167,7 @@ target_sources(
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/ble_app/ble_app_main.c
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/bas/bas_main.c
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/dis/dis_main.c
+    ${PROJECT_SOURCE_DIR}/comms/ble/ocr/profiles/ocr/ocr_main.c
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc/svc_batt.c
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc/svc_dis.c
     ${PROJECT_SOURCE_DIR}/comms/ble/ocr/svc/svc_ocr.c
@@ -177,4 +179,4 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE_NAME:${APPLICATION}> $<TARGET_FILE_NAME:${APPLICATION}>.bin
 )
 
-add_dependencies(${APPLICATION} hal bsp rtos tflm)
+add_dependencies(${APPLICATION} hal bsp rtos ble tflm)

@@ -55,6 +55,7 @@
 
 #include "bas_api.h"
 #include "svc_batt.h"
+#include "ocr_api.h"
 #include "svc_ocr.h"
 
 #include "ble_app_api.h"
@@ -543,8 +544,7 @@ void BleAppStart(void)
     SvcBattCbackRegister(BasReadCback, NULL);
     SvcBattAddGroup();
 
-    SvcOcrCbackRegister(NULL, NULL);
-    SvcOcrAddGroup();
+    OcrStart();
 
     GattSetSvcChangedIdx(BLE_APP_GATT_SC_CCC_IDX);
 

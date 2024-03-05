@@ -64,7 +64,7 @@ static const uint8_t ocrValSvc[] = { ATT_UUID_OCR_SERVICE };
 static const uint8_t ocrLenSvc = sizeof(ocrValSvc);
 
 /* Characteristic */
-static const uint8_t ocrValStrCh[] = {ATT_PROP_READ | ATT_PROP_WRITE, UINT16_TO_BYTES(OCR_HDL), ATT_UUID_OCR_CH };
+static const uint8_t ocrValStrCh[] = {ATT_PROP_READ | ATT_PROP_WRITE | ATT_PROP_NOTIFY, UINT16_TO_BYTES(OCR_HDL), ATT_UUID_OCR_CH };
 static const uint16_t ocrLenStrCh = sizeof(ocrValStrCh);
 
 /* String Value */
@@ -101,13 +101,13 @@ static const attsAttr_t ocrList[] =
     0,
     ATTS_PERMIT_READ
   },
-  /* String Value */
+  /* OCR Control Value */
   {
     svcOcrStrUuid,
     ocrValStr,
     (uint16_t *) &ocrLenStr,
     sizeof(ocrValStr),
-    ATTS_SET_WRITE_CBACK | ATTS_SET_VARIABLE_LEN,
+    ATTS_SET_READ_CBACK | ATTS_SET_WRITE_CBACK | ATTS_SET_VARIABLE_LEN,
     OCR_SEC_PERMIT_READ | OCR_SEC_PERMIT_WRITE
   },
   /* Client Characteristic Configuration Descriptor */
