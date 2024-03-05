@@ -255,8 +255,14 @@ static void BleAppProcCccState(BleAppMsg_t *pMsg)
 {
     if (pMsg->ccc.idx == BLE_APP_OCR_CCC_IDX)
     {
-        am_hal_gpio_pinconfig(AM_BSP_GPIO_LED1, g_AM_HAL_GPIO_OUTPUT);
-        am_hal_gpio_state_write(AM_BSP_GPIO_LED1, AM_HAL_GPIO_OUTPUT_SET);
+        if (pMsg->ccc.value == ATT_CLIENT_CFG_NOTIFY)
+        {
+            OcrEnableNotification((dmConnId_t)pMsg->ccc.hdr.param, BLE_APP_OCR_CCC_IDX);
+        }
+        else
+        {
+            OcrDisableNotification();
+        }
     }
 }
 
