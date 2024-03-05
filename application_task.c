@@ -190,13 +190,8 @@ static void application_task(void *parameter)
             switch(message)
             {
             case APPLICATION_COMMAND_CAPTURE_START:
-                am_util_stdio_printf("Capture Start Triggered\r\n");
-
-                camera_message_t message;
-                message.command = CAMERA_COMMAND_STILL_CAPTURE;
-                message.payload.capture_parameters.resolution = CAM_IMAGE_MODE_96X96;
-                message.payload.capture_parameters.format = CAM_IMAGE_PIX_FMT_RGB565;
-                camera_task_send(&message);
+                am_util_stdio_printf("Capture Triggered By Button\r\n");
+                camera_capture();
                 break;
 
             case APPLICATION_COMMAND_CAPTURE_DONE:

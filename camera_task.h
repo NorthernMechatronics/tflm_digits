@@ -67,5 +67,6 @@ typedef void (*camera_event_handler_t)(uint8_t *, size_t size);
 extern void camera_task_create(uint32_t priority);
 extern void camera_task_send(camera_message_t *message);
 extern void camera_event_subscribe(camera_command_t event, camera_event_handler_t handler);
+extern void camera_capture(void);
 
 #endif

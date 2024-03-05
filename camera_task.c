@@ -468,3 +468,12 @@ void camera_event_subscribe(camera_command_t event, camera_event_handler_t handl
         }
     }
 }
+
+void camera_capture(void)
+{
+    camera_message_t message;
+    message.command = CAMERA_COMMAND_STILL_CAPTURE;
+    message.payload.capture_parameters.resolution = CAM_IMAGE_MODE_96X96;
+    message.payload.capture_parameters.format = CAM_IMAGE_PIX_FMT_RGB565;
+    camera_task_send(&message);
+}
