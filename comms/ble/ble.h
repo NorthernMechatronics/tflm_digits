@@ -32,6 +32,10 @@
 #ifndef _BLE_H_
 #define _BLE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief BLE stack state
  * 
@@ -74,5 +78,11 @@ extern void ble_advertise_stop();
  * @param ui32Enabled 
  */
 extern void ble_tracing_set(uint32_t ui32Enabled);
+
+extern void ble_inference_result_notify();
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif

@@ -33,8 +33,6 @@
 #include <string.h>
 
 #include <am_mcu_apollo.h>
-#include <am_util.h>
-#include <am_bsp.h>
 
 #include "wsf_types.h"
 
@@ -58,7 +56,15 @@
 #include "ocr_api.h"
 #include "svc_ocr.h"
 
+#include "ble.h"
 #include "ble_app_api.h"
+
+#define BLE_APP_MSG_START   0xA0
+
+enum
+{
+    OCR_INFERENCE_COMPLETE_IND = BLE_APP_MSG_START,
+};
 
 /**************************************************************************************************
   Data Types
@@ -424,6 +430,10 @@ static void BleAppProcMsg(BleAppMsg_t *pMsg)
 
     switch (pMsg->hdr.event)
     {
+    case OCR_INFERENCE_COMPLETE_IND:
+        OcrNotifyInferenceResult();
+        break;
+
     case ATTS_HANDLE_VALUE_CNF:
         break;
 
@@ -619,4 +629,19 @@ void BleAppHandlerInit(wsfHandlerId_t handlerId)
     AppServerInit();
 
     BasInit(handlerId, (basCfg_t *)&bleAppBasCfg);
+}
+
+void ble_inference_result_notify()
+{
+    if (!OcrIsNotificationStarted())
+    {
+        return;
+    }
+
+    BleAppMsg_t *msg = WsfMsgAlloc(sizeof(BleAppMsg_t));
+    if (msg)
+    {
+        msg->hdr.event = OCR_INFERENCE_COMPLETE_IND;
+        WsfMsgSend(bleAppHandlerId, msg);
+    }
 }

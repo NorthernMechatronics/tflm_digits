@@ -48,6 +48,7 @@
 #include "button.h"
 #include "camera_task.h"
 #include "ble.h"
+#include "ocr_api.h"
 
 #include "application_task.h"
 #include "application_task_cli.h"
@@ -150,6 +151,11 @@ static void application_inference()
     am_util_stdio_printf("Inference Done\r\n");
 }
 
+static void application_ble_inference_trigger(uint8_t *data, size_t len)
+{
+    camera_capture();
+}
+
 static void application_setup_task()
 {
     am_hal_gpio_pinconfig(AM_BSP_GPIO_LED0, g_AM_HAL_GPIO_OUTPUT);
@@ -168,7 +174,10 @@ static void application_setup_task()
     am_hal_gpio_state_write(AM_BSP_GPIO_LED4, AM_HAL_GPIO_OUTPUT_CLEAR);
 
     application_burst_init();
+
     ble_stack_state_set(BLE_STACK_STARTED);
+    OcrRegisterInferenceTrigger(application_ble_inference_trigger);
+
     tflm_setup();
 
     button_sequence_register(1, 0B0, application_button_handler);

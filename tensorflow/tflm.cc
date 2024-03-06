@@ -43,6 +43,9 @@
 
 #include "tflm.h"
 
+#include "ble.h"
+#include "ocr_api.h"
+
 namespace
 {
 // Declare all of the necessary variables: error_reporter, model, interpreter,
@@ -142,6 +145,7 @@ uint32_t prediction_results(int8_t *out, size_t *outlen, uint32_t time)
     // Resize the scores to from [-128, 127], to [0, 255] for better readability.
     const int RESIZE_CONSTANT = 128;
     int max_score = 0, max_index = 0;
+    size_t index = 0;
     for (int i = 0; i < *outlen; ++i) 
     {
         int curr_score = out[i] + RESIZE_CONSTANT;
@@ -150,8 +154,9 @@ uint32_t prediction_results(int8_t *out, size_t *outlen, uint32_t time)
             max_index = i;
             max_score = curr_score;
         }
+        OcrUpdateInferenceResult(index, (uint8_t)curr_score);
+        index++;
     }
-
     // Show predicted digits and raw categories. The output tensor format is dependent on
     // the model itself, so you must verify before running on the microcontroller.
     TF_LITE_REPORT_ERROR(error_reporter, "Predicted digit: %c\nScore: %d", kCategoryLabels[max_index], max_score);
@@ -176,6 +181,18 @@ uint32_t prediction_results(int8_t *out, size_t *outlen, uint32_t time)
     TF_LITE_REPORT_ERROR(error_reporter, "    }");
     TF_LITE_REPORT_ERROR(error_reporter, "}");
     TF_LITE_REPORT_ERROR(error_reporter, "\x02\x02");
+
+    OcrUpdateInferenceResult(index++, (uint8_t)kCategoryLabels[max_index]);
+    OcrUpdateInferenceResult(index++, (uint8_t)max_score);
+
+    // BLE Specification for multi-octet fields shall be sent least significant octet first (little endian)
+    OcrUpdateInferenceResult(index++, (uint8_t)(time & 0xFF));
+    time >>= 8;
+    OcrUpdateInferenceResult(index++, (uint8_t)(time & 0xFF));
+    time >>= 8;
+    OcrUpdateInferenceResult(index++, (uint8_t)(time & 0xFF));
+    time >>= 8;
+    OcrUpdateInferenceResult(index++, (uint8_t)(time & 0xFF));
 
     return predicted_value;
 }
@@ -239,6 +256,7 @@ uint32_t tflm_inference(uint8_t *in, size_t inlen, int8_t *out, size_t *outlen)
     }
 
     predicted_value = prediction_results(out, outlen, inference_ticks);
+    ble_inference_result_notify();
 
     inference_count++;
 

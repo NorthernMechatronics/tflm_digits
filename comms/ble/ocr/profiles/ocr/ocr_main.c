@@ -65,7 +65,7 @@ static uint8_t ocrWriteCback(dmConnId_t connId, uint16_t handle, uint8_t operati
 {
     if (OcrHandler)
     {
-        OcrHandler();
+        OcrHandler(&pValue[offset], len);
     }
 
     return ATT_SUCCESS;
@@ -84,7 +84,7 @@ bool_t OcrIsNotificationStarted(void)
 
 void OcrEnableNotification(dmConnId_t connId, uint8_t cccIdx)
 {
-    OcrConnId = OcrConnId;
+    OcrConnId = connId;
     OcrCccIdx = cccIdx;
 }
 
@@ -98,7 +98,12 @@ void OcrRegisterInferenceTrigger(ocr_handler_t handler)
     OcrHandler = handler;
 }
 
-void OcrUpdateInferenceResult(uint8_t *data, size_t length)
+void OcrUpdateInferenceResult(size_t index, uint8_t value)
+{
+    OcrInferenceResult[index] = value;
+}
+
+void OcrNotifyInferenceResult(void)
 {
     if (OcrConnId == DM_CONN_ID_NONE ||
         !AttsCccEnabled(OcrConnId, OcrCccIdx))
@@ -106,6 +111,5 @@ void OcrUpdateInferenceResult(uint8_t *data, size_t length)
         return;
     }
 
-    memcpy(OcrInferenceResult, data, length);
-    AttsHandleValueNtf(OcrConnId, OCR_HDL, length, OcrInferenceResult);
+    AttsHandleValueNtf(OcrConnId, OCR_HDL, OCR_INFERENCE_RESULT_SIZE, OcrInferenceResult);
 }

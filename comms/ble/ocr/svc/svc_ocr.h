@@ -61,7 +61,7 @@ extern "C"
   0x73, 0xFA, \
   0x06, 0x00, 0x00, 0x00
 
-#define OCR_MAX_SIZE  (12 + ATT_VALUE_NTF_LEN)
+#define OCR_MAX_SIZE  (16 + ATT_VALUE_NTF_LEN)
 
 /**************************************************************************************************
  Handle Ranges

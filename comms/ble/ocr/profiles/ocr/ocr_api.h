@@ -39,14 +39,15 @@
 extern "C" {
 #endif
 
-typedef void (*ocr_handler_t)(void);
+typedef void (*ocr_handler_t)(uint8_t *, size_t);
 
 void OcrStart(void);
 bool_t OcrIsNotificationStarted(void);
 void OcrEnableNotification(dmConnId_t connId, uint8_t cccIdx);
 void OcrDisableNotification(void);
 void OcrRegisterInferenceTrigger(ocr_handler_t handler);
-void OcrUpdateInferenceResult(uint8_t *data, size_t length);
+void OcrUpdateInferenceResult(size_t index, uint8_t value);
+void OcrNotifyInferenceResult(void);
 
 #ifdef __cplusplus
 };
