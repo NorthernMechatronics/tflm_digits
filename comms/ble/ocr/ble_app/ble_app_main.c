@@ -147,18 +147,25 @@ static const uint8_t bleAppAdvDataDisc[] = {
     0,                    /*! tx power */
 
     /*! service UUID list */
-    3,                   /*! length */
-    DM_ADV_TYPE_16_UUID, /*! AD type */
-    UINT16_TO_BYTES(ATT_UUID_DEVICE_INFO_SERVICE)};
+    17,
+    DM_ADV_TYPE_128_UUID,
+    ATT_UUID_OCR_SERVICE,
+};
 
 /*! scan data, discoverable mode */
 static const uint8_t bleAppScanDataDisc[] = {
     /*! device name */
-    4,                      /*! length */
+    9,                      /*! length */
     DM_ADV_TYPE_LOCAL_NAME, /*! AD type */
     'N',
     'M',
-    'I'};
+    '1',
+    '8',
+    '0',
+    '1',
+    '0',
+    '0',
+    };
 
 /**************************************************************************************************
   Global Variables
